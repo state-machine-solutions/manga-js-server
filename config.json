@@ -1,0 +1,23 @@
+{
+    "connections":{
+        "http":{
+            "port":8001
+        },
+        "https":{
+            "port":8002,
+            "key":"",
+            "cert":""
+        },
+        "io":{
+            "port":8000
+        },
+        "cors":{
+            "origin": "*"
+        }
+    },
+    "attached":[],
+    "initialData":"./initialData.json",
+    "__validation":"./validation.json",
+    "hidePanel":false,
+    "measureBytes":true
+}
