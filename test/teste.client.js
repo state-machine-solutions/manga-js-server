@@ -1,7 +1,8 @@
 const MangaClient = require( "@manga-js/manga-js-client" ) ;
 var config = {
     ip:"http://localhost",
-    port:8000
+    port:8000,
+    appName:"Oi"
 };
 var reciver = new MangaClient(config);
 
