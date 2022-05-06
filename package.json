@@ -1,6 +1,6 @@
 {
   "name": "Manga JS Server",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "tms_dependencies": {},
   "description": "",
   "main": "server.js",
@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@manga-js/manga-js-client": "^1.1.0",
-    "@manga-js/manga-js-core": "^1.0.3",
+    "@manga-js/manga-js-core": "^1.1.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "fs": "0.0.1-security",
