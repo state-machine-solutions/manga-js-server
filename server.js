@@ -11,16 +11,16 @@ var args = minimist(process.argv.slice(2), {
         h: 'httpPort',
 		    i: 'ioPort',
         c: 'config',
-        v: 'validation'
+        v: 'validation',
+        n: 'appName'
     }
 });
 //### Lendo dados iniciais e config
 var configPath = args.config?args.config:"./config.json";
-
-
+var packageInfo = require('./package.json') ;
 
 var configInfo = getJsonFile(configPath) || {};
-
+let appName = args.appName || configInfo.appName || packageInfo.name
 var initialData = configInfo.initialData;
 if(typeof initialData == "string"){
   //if is string, is the path to another config
@@ -39,10 +39,10 @@ var validationRules = getJsonFile(validationPath) || {};
 
 //ler o arquivo inicial
 //var initialData = { teste:1, lalala:2, pos:{x:1}};
-var packageInfo = require('./package.json') ;
+
 var version =   ' v.' + packageInfo.version ;
 var d = require('panel-log') ;
-d.appName = packageInfo.name;
+d.appName = appName;
 d.appVersion = version;
 d.setPercentComplete(1) ;
 if(!configInfo.hidePanel){

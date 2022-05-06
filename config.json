@@ -1,4 +1,5 @@
 {
+    "appName":"Xuxu",
     "connections":{
         "http":{
             "port":8001
