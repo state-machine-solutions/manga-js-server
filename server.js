@@ -55,6 +55,9 @@ const DEFAULT_HTTPS_SERVER_PORT = configInfo?.connections?.https?.port;
 var ioPort = args.ioPort ? args.ioPort : DEFAULT_IO_SERVER_PORT ; 
 var httpPort = args.httpPort ? args.httpPort : DEFAULT_HTTP_SERVER_PORT ; 
 var httpsPort = args.httpsPort ? args.httpsPort : DEFAULT_HTTPS_SERVER_PORT ; 
+if( configInfo?.connections?.io?.port ) configInfo.connections.io.port =  ioPort
+if( configInfo?.connections?.http?.port ) configInfo.connections.http.port =  httpPort
+if( configInfo?.connections?.https?.port ) configInfo.connections.https.port =  httpsPort
 var smsCore = new SMSCore(configInfo) ;
 
 var validation = new Validation(validationRules);
