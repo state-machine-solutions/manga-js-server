@@ -1,7 +1,8 @@
-const socketIO = require('socket.io') ;
-var express = require('express') ;
+const socketIO = require('socket.io');
+const express = require('express');
+const socketAuth = require('socketio-auth');
 const app = express() ; 
-function IoServer ( stateMachineServer, httpServer = null, cors = {} ){
+function IoServer ( stateMachineServer, httpServer = null, cors = {}, auth = null ){
     var me = this ;
     var port ;
     if(!httpServer){
@@ -10,6 +11,27 @@ function IoServer ( stateMachineServer, httpServer = null, cors = {} ){
     var io = socketIO(httpServer, {
         cors
     });
+    function authenticate(socket, data, callback) {
+        var username = data.username;
+        var password = data.password;
+        return callback(null, auth?.password == password && username == auth?.username );
+    }
+    function postAuthenticate(socket, data) {
+        var username = data.username;
+        socket.client.user = {username};
+    }
+    function disconnect(socket, err) {
+        console.log(socket.id + ' disconnected');
+    }
+    if(auth?.username){
+        socketAuth(io, {
+                authenticate,
+                postAuthenticate,
+                disconnect,
+                timeout: 1000
+            }
+        );
+    }
     var loggedClients = new Map() ;
     var loggedNames = new Map() ;
     var connectedClients = new Map() ;
