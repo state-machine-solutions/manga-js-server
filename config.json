@@ -2,7 +2,7 @@
     "appName":"Xuxu",
     "connections":{
         "http":{
-            "port":8001
+            "port":60018
         },
         "https":{
             "port":8002,
