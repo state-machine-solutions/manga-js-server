@@ -1,5 +1,5 @@
 {
-    "appName":"Xuxu",
+    "appName":"Example",
     "connections":{
         "http":{
             "port":60018
@@ -10,7 +10,11 @@
             "cert":""
         },
         "io":{
-            "port":8000
+            "port":8000,
+            "auth":{
+                "username":"test",
+                "password":"passtest"
+            }
         },
         "cors":{
             "origin": "*"

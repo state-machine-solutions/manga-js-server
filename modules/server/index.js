@@ -18,7 +18,7 @@ function SMSCore(config = null) {
     this.http = new HttpServer(this.sms, config?.connections?.http, config?.connections?.https);
   }
   if(ioPort){
-    this.io = new IoServer(this.sms, this.http, config?.connections?.cors);
+    this.io = new IoServer(this.sms, this.http, config?.connections?.cors, config?.connections?.io?.auth);
     this.io.measureBytes = (config && config.measureBytes) ? true : false;
   }
   this.startHttp = _ => {
