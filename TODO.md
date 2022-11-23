@@ -5,4 +5,4 @@
 [V] auth connection
 [ ] rootAccess
 [ ] player limitations
-[>] remember module, esquema de lembrar os dados salvos
+[V] autosave
