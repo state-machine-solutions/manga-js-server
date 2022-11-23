@@ -24,7 +24,6 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
     this.getHttpsServer = ()=>{
         return httpsServer;
     }
-    
     app.use(bodyParser.json({limit: "50mb"}));
     app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
     app.use(function(err, req, res, next) {   

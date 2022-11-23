@@ -1,8 +1,8 @@
-[X] CORS
+[?] CORS
 [ ] documentação básica em md
-[ ] https
+[ ] https autoload certs folder
 [ ] private data
-[ ] auth connection
+[V] auth connection
 [ ] rootAccess
 [ ] player limitations
-[ ] remember module, esquema de lembrar os dados salvos
+[>] remember module, esquema de lembrar os dados salvos

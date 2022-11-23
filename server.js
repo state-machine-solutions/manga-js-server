@@ -3,7 +3,7 @@ var fs = require('fs');
 var path = require('path');
 const getJsonFile = require('./modules/utils/getJsonFile')
 const SMSCore = require('./modules/server') ;
-
+const AutoSave = require('./modules/AutoSave')
 const Validation = require('./modules/Validation')
 const minimist = require('minimist');
 var args = minimist(process.argv.slice(2), {  
@@ -37,8 +37,6 @@ var defaultValidation =   './validation.json';
 validationPath = args.validation?args.validation:defaultValidation;
 var validationRules = getJsonFile(validationPath) || {};
 
-//ler o arquivo inicial
-//var initialData = { teste:1, lalala:2, pos:{x:1}};
 
 var version =   ' v.' + packageInfo.version ;
 var d = require('panel-log') ;
@@ -60,6 +58,9 @@ if( configInfo?.connections?.http?.port ) configInfo.connections.http.port =  ht
 if( configInfo?.connections?.https?.port ) configInfo.connections.https.port =  httpsPort
 var smsCore = new SMSCore(configInfo) ;
 
+if( configInfo?.autoSave?.frequencyMinutes > 0 ){
+  new AutoSave(smsCore, configInfo.initialData, configInfo.autoSave.frequencyMinutes)
+}
 var validation = new Validation(validationRules);
 smsCore.setValidateFN(validation.validate);
 
@@ -116,49 +117,46 @@ d.addItem(1, 7, "Bytes TOTAL", 15, ()=>{
   return io?io.stats.totalBytes:"disable"
 })
 
+d.onUpdate.add(()=>{
+console.log(d.newLineString) ;
+  var loggeds = io?io.getLoggedNames() : null;
+  var connecteds = io?io.getConnectedClients() : [];
+  var colors = [d.color.yellow, d.color.blueBright, d.color.green, d.color.red] ;
+  var j = 0 ;
+  var headers = new d.Line()
+  .padding(2)
+  .column('Name', 30, [d.color.cyan])
+  .column('id', 25, [d.color.cyan])
+  .column('Date In', 20, [d.color.cyan])
+  .column('Sents', 8, [d.color.cyan])
+  .column('Bytes last sec', 20, [d.color.cyan])
+  .column('Bytes TOTAL', 30, [d.color.cyan])
+  .fill()
+  .output();
 
-if(true){
-  d.onUpdate.add(()=>{
-  console.log(d.newLineString) ;
-    var loggeds = io?io.getLoggedNames() : null;
-    var connecteds = io?io.getConnectedClients() : [];
-    var colors = [d.color.yellow, d.color.blueBright, d.color.green, d.color.red] ;
-    var j = 0 ;
-    var headers = new d.Line()
+  connecteds.forEach(( client, key )=>{
+    var loggedName = loggeds.has(key) ? " "+loggeds.get(key)+" " : " No Name    " ;
+    j = Math.abs(j-1);
+    var bg = j == 1 ? d.color.bgBlue: d.color.bgYellowBright ;
+    var cor = j == 1 ? d.color.yellowBright: d.color.blue ;
+    var line = new d.Line()
     .padding(2)
-    .column('Name', 30, [d.color.cyan])
-    .column('id', 25, [d.color.cyan])
-    .column('Date In', 20, [d.color.cyan])
-    .column('Sents', 8, [d.color.cyan])
-    .column('Bytes last sec', 20, [d.color.cyan])
-    .column('Bytes TOTAL', 30, [d.color.cyan])
+    .column( loggedName, 30 , [ cor , d.color.bold, bg ] )
+    .column( key, 25, [d.color.white]  )
+    .column( client.dateIn.toLocaleString("pt-BR") , 20, [d.color.blue] )
+    .column( client.messageCount , 8, [d.color.blue] )
+    .column( client.partialBytes , 20, [d.color.blue] )
+    .column( client.totalBytes , 30, [d.color.blue] )
+    
     .fill()
     .output();
-  
-    connecteds.forEach(( client, key )=>{
-      var loggedName = loggeds.has(key) ? " "+loggeds.get(key)+" " : " No Name    " ;
-      j = Math.abs(j-1);
-      var bg = j == 1 ? d.color.bgBlue: d.color.bgYellowBright ;
-      var cor = j == 1 ? d.color.yellowBright: d.color.blue ;
-      var line = new d.Line()
-      .padding(2)
-      .column( loggedName, 30 , [ cor , d.color.bold, bg ] )
-      .column( key, 25, [d.color.white]  )
-      .column( client.dateIn.toLocaleString("pt-BR") , 20, [d.color.blue] )
-      .column( client.messageCount , 8, [d.color.blue] )
-      .column( client.partialBytes , 20, [d.color.blue] )
-      .column( client.totalBytes , 30, [d.color.blue] )
-      
-      .fill()
-      .output();
-    }) ;
-    console.log(d.newLineString+" IO Logs") ;
-    if(io){
-      for(var i = io.logs.length-1; i >= 0 && i > io.logs.length-10; i--){
-          var log = io.logs[i] ;
-          console.log.apply( null, log );
-      }
-    }
-    console.log(d.newLineString) ;
   }) ;
-}
+  console.log(d.newLineString+" IO Logs") ;
+  if(io){
+    for(var i = io.logs.length-1; i >= 0 && i > io.logs.length-10; i--){
+        var log = io.logs[i] ;
+        console.log.apply( null, log );
+    }
+  }
+  console.log(d.newLineString) ;
+}) ;

@@ -8,8 +8,13 @@ function IoServer ( stateMachineServer, httpServer = null, cors = {}, auth = nul
     if(!httpServer){
         httpServer = require('http').createServer(app) 
     }
-    var io = socketIO(httpServer, {
+    httpServer = require('http').createServer(app) 
+    //let http = require('http').createServer(app) 
+    let io = socketIO(httpServer, {
         cors
+        // cors: {
+        //     origin: "*"
+        //   }
     });
     function authenticate(socket, data, callback) {
         var username = data.username;

@@ -24,5 +24,8 @@
     "initialData":"./initialData.json",
     "__validation":"./validation.json",
     "hidePanel":false,
-    "measureBytes":true
+    "measureBytes":true,
+    "autoSave":{
+        "frequencyMinutes": 0.1
+    }
 }
