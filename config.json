@@ -2,7 +2,7 @@
     "appName":"Example",
     "connections":{
         "http":{
-            "port":60018
+            "port":80
         },
         "https":{
             "port":8002,

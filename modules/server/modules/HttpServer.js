@@ -1,9 +1,9 @@
-var fs = require('fs');
+const fs = require('fs');
 const http = require('http');
 const https = require('https')
 
 const express = require('express')
-var bodyParser  =    require("body-parser");
+const bodyParser  =    require("body-parser");
 const path = require('path');
 
 function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
@@ -29,9 +29,9 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
     app.use(function(err, req, res, next) {   
         if(err){
             //req.path
-            var t = new Date();
+            const t = new Date();
             
-            var message = " Error parsing data"+
+            const message = " Error parsing data"+
             "\nrequest: " + req.path+
             "\nbody: " +   JSON.stringify( req.body )+
             "\n_________________________________________________________________________________________________ ";
@@ -72,11 +72,16 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
         res.json({success:true, info:stateMachineServer.getInfo()});
     });
     app.get('/get',(req,res)=>{
-        console.log( 'HTTP get : ' + req.query.path)
-        stateMachineServer.get( req.query.path ).then((data)=>{
-            var result = JSON.stringify( data );
+        if(!req.query.hasOwnProperty('path')){
             res.setHeader('Content-Type', 'application/json');
-            res.end( result );
+            res.status(400).end(JSON.stringify({messages:["path is required"]}))
+            return;
+        }
+        console.log( 'HTTP get : ' + req.query?.path)
+        stateMachineServer.get( req.query.path ).then((data)=>{
+            const result = JSON.stringify( data );
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).end( result );
         });
         
     });
@@ -84,6 +89,16 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
 
 
     app.post('/set',(req,res)=>{
+        if(!req.body.hasOwnProperty('path')){
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).end(JSON.stringify({messages:["path is required"]}))
+            return;
+        }
+        if(!req.body.hasOwnProperty('value')){
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).end(JSON.stringify({messages:["value is required"]}))
+            return;
+        }
         stateMachineServer.set( req.body.path, req.body.value ).then((r)=>{
             res.setHeader('Content-Type', 'application/json');
             res.end( JSON.stringify(r) );
@@ -91,8 +106,17 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
     });
 
     app.post('/reset',(req,res)=>{
-        //console.log( req.body );
-        var milliseconds = new Date().getTime();
+        if(!req.body.hasOwnProperty('path')){
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).end(JSON.stringify({messages:["path is required"]}))
+            return;
+        }
+        if(!req.body.hasOwnProperty('value')){
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).end(JSON.stringify({messages:["value is required"]}))
+            return;
+        }
+        const milliseconds = new Date().getTime();
         stateMachineServer.reset( req.body.path, req.body.value )
         .then((r)=>{
             res.setHeader('Content-Type', 'application/json');
@@ -102,7 +126,17 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
 
     app.post('/message',(req,res)=>{
         //console.log( req.body );
-        var save = req.body.save ;
+        if(!req.body.hasOwnProperty('path')){
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).end(JSON.stringify({messages:["path is required"]}))
+            return;
+        }
+        if(!req.body.hasOwnProperty('value')){
+            res.setHeader('Content-Type', 'application/json');
+            res.status(400).end(JSON.stringify({messages:["value is required"]}))
+            return;
+        }
+        const save = req.body?.save || false;
         stateMachineServer.message( req.body.path, req.body.value, save ).then((r)=>{
             res.setHeader('Content-Type', 'application/json');
             res.end( JSON.stringify(r) );
@@ -110,9 +144,9 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
     });
     app.get('/validate',(req,res)=>{
         console.log( 'HTTP validate : ' + req.query.path)
-        var p = req.query.path || "";
-        var data = stateMachineServer.validate( p ).then((data)=>{
-            var result = JSON.stringify( data );
+        const p = req.query.path || "";
+        const data = stateMachineServer.validate( p ).then((data)=>{
+            const result = JSON.stringify( data );
             res.setHeader('Content-Type', 'application/json');
             res.end( result );
        });       
@@ -136,7 +170,7 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
     });
     app.get('/debug/listeners',(req,res)=>{
         //console.log( req.body );
-        var r = stateMachineServer.getListeners() ;
+        const r = stateMachineServer.getListeners() ;
         res.setHeader('Content-Type', 'application/json');
         res.end( JSON.stringify(r) );
     });
