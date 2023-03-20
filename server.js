@@ -1,12 +1,12 @@
 'use strict';
-var fs = require('fs');
-var path = require('path');
+let fs = require('fs');
+let path = require('path');
 const getJsonFile = require('./modules/utils/getJsonFile')
 const SMSCore = require('./modules/server') ;
 const AutoSave = require('./modules/AutoSave')
 const Validation = require('./modules/Validation')
 const minimist = require('minimist');
-var args = minimist(process.argv.slice(2), {  
+let args = minimist(process.argv.slice(2), {  
     alias: {
         h: 'httpPort',
 		    i: 'ioPort',
@@ -15,31 +15,31 @@ var args = minimist(process.argv.slice(2), {
         n: 'appName'
     }
 });
-//### Lendo dados iniciais e config
-var configPath = args.config?args.config:"./config.json";
-var packageInfo = require('./package.json') ;
+// Reading initial data
+const configPath = args.config?args.config:"./config.json";
+const packageInfo = require('./package.json') ;
 
-var configInfo = getJsonFile(configPath) || {};
-let appName = args.appName || configInfo.appName || packageInfo.name
-var initialData = configInfo.initialData;
+const configInfo = getJsonFile(configPath) || {};
+const appName = args.appName || configInfo.appName || packageInfo.name
+let initialData = configInfo.initialData;
 if(typeof initialData == "string"){
-  //if is string, is the path to another config
+  //if is string, it is the path to another config
   if( fs.existsSync( initialData ) ){
     initialData = JSON.parse(fs.readFileSync( initialData , 'utf8'));
   }
 }
-var validationPath = '';
+let validationPath = '';
 if( configInfo.hasOwnProperty('validation') )
 {
   validationPath = configInfo.validation;
 }
-var defaultValidation =   './validation.json';
+let defaultValidation =   './validation.json';
 validationPath = args.validation?args.validation:defaultValidation;
-var validationRules = getJsonFile(validationPath) || {};
+let validationRules = getJsonFile(validationPath) || {};
 
 
-var version =   ' v.' + packageInfo.version ;
-var d = require('panel-log') ;
+let version =   ' v.' + packageInfo.version ;
+let d = require('panel-log') ;
 d.appName = appName;
 d.appVersion = version;
 d.setPercentComplete(1) ;
@@ -50,18 +50,18 @@ if(!configInfo.hidePanel){
 const DEFAULT_IO_SERVER_PORT = configInfo?.connections?.io?.port 
 const DEFAULT_HTTP_SERVER_PORT = configInfo?.connections?.http?.port;
 const DEFAULT_HTTPS_SERVER_PORT = configInfo?.connections?.https?.port;
-var ioPort = args.ioPort ? args.ioPort : DEFAULT_IO_SERVER_PORT ; 
-var httpPort = args.httpPort ? args.httpPort : DEFAULT_HTTP_SERVER_PORT ; 
-var httpsPort = args.httpsPort ? args.httpsPort : DEFAULT_HTTPS_SERVER_PORT ; 
+let ioPort = args.ioPort ? args.ioPort : DEFAULT_IO_SERVER_PORT ; 
+let httpPort = args.httpPort ? args.httpPort : DEFAULT_HTTP_SERVER_PORT ; 
+let httpsPort = args.httpsPort ? args.httpsPort : DEFAULT_HTTPS_SERVER_PORT ; 
 if( configInfo?.connections?.io?.port ) configInfo.connections.io.port =  ioPort
 if( configInfo?.connections?.http?.port ) configInfo.connections.http.port =  httpPort
 if( configInfo?.connections?.https?.port ) configInfo.connections.https.port =  httpsPort
-var smsCore = new SMSCore(configInfo) ;
+const smsCore = new SMSCore(configInfo) ;
 
 if( configInfo?.autoSave?.frequencyMinutes > 0 ){
   new AutoSave(smsCore, configInfo.initialData, configInfo.autoSave.frequencyMinutes)
 }
-var validation = new Validation(validationRules);
+let validation = new Validation(validationRules);
 smsCore.setValidateFN(validation.validate);
 
 let sms = smsCore.sms;
@@ -71,7 +71,7 @@ if(initialData && typeof(initialData)=='object'){
   setInitialData(initialData);
 }
 function setInitialData(data){
-  for( var i in data){
+  for( let i in data){
     sms.set(i, data[i], false );
   }
 }
@@ -82,7 +82,7 @@ if(http){
   http.start();
 }
 
-var hasValidation = (Object.keys(validationRules).length > 0);
+let hasValidation = (Object.keys(validationRules).length > 0);
 d.addItem(0, 1, "Validation", 100, (data)=>{
   data.color = [ hasValidation ? d.color.green : d.color.red ]
   return (hasValidation ? "Using":"Not Found"+ ` ${validationPath}`)
@@ -119,11 +119,11 @@ d.addItem(1, 7, "Bytes TOTAL", 15, ()=>{
 
 d.onUpdate.add(()=>{
 console.log(d.newLineString) ;
-  var loggeds = io?io.getLoggedNames() : null;
-  var connecteds = io?io.getConnectedClients() : [];
-  var colors = [d.color.yellow, d.color.blueBright, d.color.green, d.color.red] ;
-  var j = 0 ;
-  var headers = new d.Line()
+  let loggeds = io?io.getLoggedNames() : null;
+  let connecteds = io?io.getConnectedClients() : [];
+  let colors = [d.color.yellow, d.color.blueBright, d.color.green, d.color.red] ;
+  let j = 0 ;
+  let headers = new d.Line()
   .padding(2)
   .column('Name', 30, [d.color.cyan])
   .column('id', 25, [d.color.cyan])
@@ -135,11 +135,11 @@ console.log(d.newLineString) ;
   .output();
 
   connecteds.forEach(( client, key )=>{
-    var loggedName = loggeds.has(key) ? " "+loggeds.get(key)+" " : " No Name    " ;
+    let loggedName = loggeds.has(key) ? " "+loggeds.get(key)+" " : " No Name    " ;
     j = Math.abs(j-1);
-    var bg = j == 1 ? d.color.bgBlue: d.color.bgYellowBright ;
-    var cor = j == 1 ? d.color.yellowBright: d.color.blue ;
-    var line = new d.Line()
+    let bg = j == 1 ? d.color.bgBlue: d.color.bgYellowBright ;
+    let cor = j == 1 ? d.color.yellowBright: d.color.blue ;
+    let line = new d.Line()
     .padding(2)
     .column( loggedName, 30 , [ cor , d.color.bold, bg ] )
     .column( key, 25, [d.color.white]  )
@@ -153,8 +153,8 @@ console.log(d.newLineString) ;
   }) ;
   console.log(d.newLineString+" IO Logs") ;
   if(io){
-    for(var i = io.logs.length-1; i >= 0 && i > io.logs.length-10; i--){
-        var log = io.logs[i] ;
+    for(let i = io.logs.length-1; i >= 0 && i > io.logs.length-10; i--){
+        let log = io.logs[i] ;
         console.log.apply( null, log );
     }
   }
