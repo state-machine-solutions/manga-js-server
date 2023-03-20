@@ -2,9 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https')
 
-const express = require('express')
 const bodyParser  =    require("body-parser");
-const path = require('path');
 
 function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
     

@@ -1,5 +1,5 @@
 [?] CORS
-[ ] documentação básica em md
+[v] documentação básica em md
 [ ] https autoload certs folder
 [ ] private data
 [V] auth connection
