@@ -50,6 +50,7 @@ Just to check if server and shows server stats
 ###  get
 
 `get` '/get' 
+`get` '/' 
 
 params: `path` 
 
@@ -69,6 +70,7 @@ Result:
 ## set
 
 `post` '/set'
+`post` '/'
 
 To update value based on path, but merging with server values
 
@@ -102,6 +104,7 @@ After change the result of `my.data.points` will be:
 
 ## reset
 
+`put` '/'
 `post` '/reset'
 
 The same as `/set` but overwrite server value
@@ -154,6 +157,7 @@ Message do not save data. But if some client was connected by socket.io, they wi
 ## delete
 
 `post` '/delete'
+`delete` '/'
 
 Body:
 ```

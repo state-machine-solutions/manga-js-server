@@ -66,10 +66,7 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
             })
         }
     }
-    app.get('/ping', (req, res)=>{
-        res.json({success:true, info:stateMachineServer.getInfo()});
-    });
-    app.get('/get',(req,res)=>{
+    const httpGet = (req,res)=>{
         if(!req.query.hasOwnProperty('path')){
             res.setHeader('Content-Type', 'application/json');
             res.status(400).end(JSON.stringify({messages:["path is required"]}))
@@ -82,11 +79,8 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
             res.status(200).end( result );
         });
         
-    });
-
-
-
-    app.post('/set',(req,res)=>{
+    }
+    const httpPost = (req,res)=>{
         if(!req.body.hasOwnProperty('path')){
             res.setHeader('Content-Type', 'application/json');
             res.status(400).end(JSON.stringify({messages:["path is required"]}))
@@ -101,9 +95,8 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
             res.setHeader('Content-Type', 'application/json');
             res.end( JSON.stringify(r) );
         }) ;
-    });
-
-    app.post('/reset',(req,res)=>{
+    }
+    const httpPut = (req,res)=>{
         if(!req.body.hasOwnProperty('path')){
             res.setHeader('Content-Type', 'application/json');
             res.status(400).end(JSON.stringify({messages:["path is required"]}))
@@ -120,7 +113,29 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
             res.setHeader('Content-Type', 'application/json');
             res.end( JSON.stringify(r) );
         });
+    }
+    const httpDelete = (req,res)=>{
+        //console.log( req.body );
+        stateMachineServer.delete( req.body.path ).then((r)=>{
+            res.setHeader('Content-Type', 'application/json');
+            res.end( JSON.stringify(r) );
+        }) ;
+    }
+    // REST
+    app.get('/', httpGet);
+    app.post('/', httpPost);
+    app.put('/', httpPut);
+    app.delete('/', httpDelete);
+
+    //named functions
+    app.get('/ping', (req, res)=>{
+        res.json({success:true, info:stateMachineServer.getInfo()});
     });
+    app.get('/get', httpGet);
+    
+    app.post('/set', httpPost);
+
+    app.post('/reset', httpPut);
 
     app.post('/message',(req,res)=>{
         //console.log( req.body );
@@ -140,39 +155,14 @@ function HttpServer ( stateMachineServer, httpConfig = null, httpsConfig){
             res.end( JSON.stringify(r) );
         }) ;
     });
-    app.get('/validate',(req,res)=>{
-        console.log( 'HTTP validate : ' + req.query.path)
-        const p = req.query.path || "";
-        const data = stateMachineServer.validate( p ).then((data)=>{
-            const result = JSON.stringify( data );
-            res.setHeader('Content-Type', 'application/json');
-            res.end( result );
-       });       
-    });
-
-    app.post('/delete',(req,res)=>{
-        //console.log( req.body );
-        stateMachineServer.delete( req.body.path ).then((r)=>{
-            res.setHeader('Content-Type', 'application/json');
-            res.end( JSON.stringify(r) );
-        }) ;
-    });
+    app.post('/delete', httpDelete);
 
     app.post('/clear',(req,res)=>{
         //console.log( req.body );
         stateMachineServer.clear();
         res.setHeader('Content-Type', 'application/json');
         res.end( JSON.stringify({success:true}) );
-    
-        
     });
-    app.get('/debug/listeners',(req,res)=>{
-        //console.log( req.body );
-        const r = stateMachineServer.getListeners() ;
-        res.setHeader('Content-Type', 'application/json');
-        res.end( JSON.stringify(r) );
-    });
- 
 }
 
 module.exports = HttpServer;
