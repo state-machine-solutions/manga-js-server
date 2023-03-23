@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@manga-js/manga-js-client": "^1.2.0",
-    "@manga-js/manga-js-core": "^1.1.2",
+    "@manga-js/manga-js-core": "^1.2.1",
     "body-parser": "^1.19.0",
     "e": "^0.2.2",
     "express": "^4.18.1",
