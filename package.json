@@ -1,6 +1,6 @@
 {
   "name": "manga-js-server",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "tms_dependencies": {},
   "description": "Project to up a manga server using http and/or socket io",
   "main": "server.js",
@@ -15,6 +15,7 @@
     "@manga-js/manga-js-client": "^1.2.0",
     "@manga-js/manga-js-core": "^1.2.1",
     "body-parser": "^1.19.0",
+    "dotenv": "^16.3.1",
     "e": "^0.2.2",
     "express": "^4.18.1",
     "fs": "0.0.1-security",

@@ -6,6 +6,22 @@ The purpose of this project is to create a state machine server to keep organize
 
 It's posible to dispose data by http protocol
 
+## ENV
+
+```
+APP_NAME=Example
+HTTP_PORT=80
+HTTPS_PORT=8002
+HTTPS_KEY=
+HTTPS_CERT=
+IO_PORT=8000
+IO_AUTH_USERNAME=test
+IO_AUTH_PASSWORD=pass
+INITIAL_DATA=./initialData.json
+AUTO_SAVE_FREQUENCE=0.1
+HIDE_PANEL=true
+```
+
 ## HTTP and HTTPS
 
 For all examples consider this data struture:
@@ -47,20 +63,21 @@ Just to check if server and shows server stats
 }
 ```
 
-###  get
+### get
 
-`get` '/get' 
-`get` '/' 
+`get` '/get'
+`get` '/'
 
-params: `path` 
+params: `path`
 
-To get values based in `path` 
+To get values based in `path`
 
 ### Example:
 
 `/get?path=my.data.points`
 
 Result:
+
 ```
 {
     "current":43
@@ -79,6 +96,7 @@ To update value based on path, but merging with server values
 `/set`
 
 Body:
+
 ```
 {
     "path": "my.data.points",
@@ -87,12 +105,15 @@ Body:
     }
 }
 ```
+
 Return
+
 ```
 {
     "success": true
 }
 ```
+
 After change the result of `my.data.points` will be:
 
 ```
@@ -114,6 +135,7 @@ The same as `/set` but overwrite server value
 `/reset`
 
 Body:
+
 ```
 {
     "path": "my.data.points",
@@ -122,12 +144,15 @@ Body:
     }
 }
 ```
+
 Return
+
 ```
 {
     "success": true
 }
 ```
+
 After change the result of `my.data.points` will be:
 
 ```
@@ -150,7 +175,7 @@ Body Params:
 }
 ```
 
-Message do not save data. But if some client was connected by socket.io, they will receive the message sent by this method. 
+Message do not save data. But if some client was connected by socket.io, they will receive the message sent by this method.
 
 | There is no http listener clients. Is not possible to receive messages by http
 
@@ -160,10 +185,10 @@ Message do not save data. But if some client was connected by socket.io, they wi
 `delete` '/'
 
 Body:
+
 ```
 { path: string }
 ```
-
 
 Remove data based on path
 
@@ -172,7 +197,6 @@ Remove data based on path
 `post` '/clear'
 
 Delete all data on server
-
 
 ## Donate:
 
