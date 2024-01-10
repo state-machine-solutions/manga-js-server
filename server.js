@@ -88,11 +88,17 @@ if (http) {
   http.start();
 }
 
-d.addItem(0, 1, "Validation", 100, (data) => {
-  return "deprecated"
+d.addItem(0, 0, "reset", 10, () => {
+  return sms.getInfo().stats.reset
 })
-d.addItem(0, 0, "Status", 20, (data) => {
-  return ""
+d.addItem(0, 1, "set", 10, () => {
+  return sms.getInfo().stats.sets
+})
+d.addItem(0, 2, "get", 10, () => {
+  return sms.getInfo().stats.gets
+})
+d.addItem(0, 3, "garbage (tic/del)", 22, () => {
+  return sms.getInfo().stats.garbageTic + "/" + sms.getInfo().stats.garbageDeletes
 })
 
 d.addItem(1, 0, "ioPort", 15, ioPort | "blocked")
@@ -110,9 +116,7 @@ d.addItem(1, 3, "Connecteds", 15, () => {
 d.addItem(1, 4, "Listeners", 15, () => {
   return sms.getInfo().stats.listeners
 })
-d.addItem(1, 5, "rst/set/get/garb", 15, () => {
-  return sms.getInfo().stats.reset + "/" + sms.getInfo().stats.sets + "/" + sms.getInfo().stats.gets + "/" + sms.getInfo().stats.garbageDeletes
-})
+
 d.addItem(1, 6, "Bytes last sec", 15, () => {
   return io ? io.stats.partialBytes : "disable"
 })

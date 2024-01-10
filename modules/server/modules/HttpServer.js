@@ -4,8 +4,8 @@ const https = require('https')
 const cors = require('cors')
 const bodyParser = require("body-parser");
 
-function HttpServer(stateMachineServer, httpConfig = null, httpsConfig) {
-
+function HttpServer(stateMachineServer, httpConfig = null, httpsConfig = {}, _useTempData = true) {
+    const useTempData = _useTempData;
     const express = require('express');
     const app = express();
     let httpPort = httpConfig?.port
@@ -65,14 +65,16 @@ function HttpServer(stateMachineServer, httpConfig = null, httpsConfig) {
             res.status(400).end(JSON.stringify({ messages: ["value is required"] }))
             return;
         }
-        const timeout = parseInt(req.body?.timeout) || 0;
-        if (timeout > 0) {
-            stateMachineServer.setTemporary(req.body.path, req.body.value, timeout)
-                .then((r) => {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify(r));
-                });
-            return;
+        if (useTempData) {
+            const timeout = parseInt(req.body?.timeout) || 0;
+            if (timeout > 0) {
+                stateMachineServer.setTemporary(req.body.path, req.body.value, timeout)
+                    .then((r) => {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.end(JSON.stringify(r));
+                    });
+                return;
+            }
         }
         stateMachineServer.set(req.body.path, req.body.value).then((r) => {
             res.setHeader('Content-Type', 'application/json');
@@ -90,14 +92,16 @@ function HttpServer(stateMachineServer, httpConfig = null, httpsConfig) {
             res.status(400).end(JSON.stringify({ messages: ["value is required"] }))
             return;
         }
-        const timeout = parseInt(req.body?.timeout) || 0;
-        if (timeout > 0) {
-            stateMachineServer.resetTemporary(req.body.path, req.body.value, timeout)
-                .then((r) => {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify(r));
-                });
-            return;
+        if (useTempData) {
+            const timeout = parseInt(req.body?.timeout) || 0;
+            if (timeout > 0) {
+                stateMachineServer.resetTemporary(req.body.path, req.body.value, timeout)
+                    .then((r) => {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.end(JSON.stringify(r));
+                    });
+                return;
+            }
         }
         stateMachineServer.reset(req.body.path, req.body.value)
             .then((r) => {
@@ -106,7 +110,6 @@ function HttpServer(stateMachineServer, httpConfig = null, httpsConfig) {
             });
     }
     const httpDelete = (req, res) => {
-        //console.log( req.body );
         stateMachineServer.delete(req.body.path).then((r) => {
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(r));
@@ -129,7 +132,6 @@ function HttpServer(stateMachineServer, httpConfig = null, httpsConfig) {
     app.post('/reset', httpPut);
 
     app.post('/message', (req, res) => {
-        //console.log( req.body );
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
             res.status(400).end(JSON.stringify({ messages: ["path is required"] }))
@@ -149,7 +151,6 @@ function HttpServer(stateMachineServer, httpConfig = null, httpsConfig) {
     app.post('/delete', httpDelete);
 
     app.post('/clear', (req, res) => {
-        //console.log( req.body );
         stateMachineServer.clear();
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ success: true }));

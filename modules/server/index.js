@@ -9,18 +9,18 @@ const IOClientKMock = require('./modules/data/IOClientKMock')
 
 
 function SMSCore(config = null) {
-  var me = this;
-  var ioPort = config?.connections?.io
+  const me = this;
+  const ioPort = config?.connections?.io
   this.sms = new MangaCore({});
   this.io = null
   this.http = null
   this.useTempData = config?.useTempData
   if (config?.connections?.http || config?.connections?.https) {
-    this.http = new HttpServer(this.sms, config?.connections?.http, config?.connections?.https);
+    this.http = new HttpServer(this.sms, config?.connections?.http, config?.connections?.https, config?.useTempData);
   }
   if (ioPort) {
-    this.io = new IoServer(this.sms, this.http, config?.connections?.cors, config?.connections?.io?.auth);
-    this.io.measureBytes = (config && config.measureBytes) ? true : false;
+    this.io = new IoServer(this.sms, this.http, config?.connections?.cors, config?.connections?.io?.auth, config?.useTempData);
+    this.io.measureBytes = (config?.measureBytes !== false);
   }
   this.startHttp = _ => {
     me.http.start();
@@ -34,7 +34,7 @@ function SMSCore(config = null) {
   }
 
   this.addListener = (path, callback, updateMode) => {
-    var listenerOb = {
+    const listenerOb = {
       "listener": {
         "property": path
       },
@@ -46,14 +46,14 @@ function SMSCore(config = null) {
     if (updateMode) {
       listenerOb.listener.updateMode = updateMode;
     }
-    var mockClient = new IOClientKMock(callback);
+    const mockClient = new IOClientKMock(callback);
     me.sms.addListener(listenerOb, mockClient);
     return mockClient;
   }
 
 
   this.addMessageListener = (path, callBack) => {
-    var listenerOb = {
+    const listenerOb = {
       "listener": {
         "property": path
       },
@@ -63,7 +63,7 @@ function SMSCore(config = null) {
       }
     };
 
-    var mockClient = new IOClientKMock(callBack);
+    const mockClient = new IOClientKMock(callBack);
     me.sms.addMessageListener(listenerOb, mockClient);
     return mockClient;
   }
@@ -77,7 +77,7 @@ function SMSCore(config = null) {
     if (data.constructor.name == "Object") {
       return data;
     }
-    var r = {};
+    const r = {};
     Object.assign(r, data);
     return r;
   }

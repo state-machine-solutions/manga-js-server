@@ -2,14 +2,14 @@ const socketIO = require('socket.io');
 const express = require('express');
 const socketAuth = require('socketio-auth');
 const app = express();
-function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null) {
-    var me = this;
-    var port;
+function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null, _useTempData = true) {
+    const me = this;
+    const useTempData = _useTempData;
+    let port;
     if (!httpServer) {
         httpServer = require('http').createServer(app)
     }
     httpServer = require('http').createServer(app)
-    //let http = require('http').createServer(app) 
     let io = socketIO(httpServer, {
         cors
         // cors: {
@@ -17,12 +17,12 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
         //   }
     });
     function authenticate(socket, data, callback) {
-        var username = data.username;
-        var password = data.password;
+        const username = data.username;
+        const password = data.password;
         return callback(null, auth?.password == password && username == auth?.username);
     }
     function postAuthenticate(socket, data) {
-        var username = data.username;
+        const username = data.username;
         socket.client.user = { username };
     }
     function disconnect(socket, err) {
@@ -37,9 +37,9 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
         }
         );
     }
-    var loggedClients = new Map();
-    var loggedNames = new Map();
-    var connectedClients = new Map();
+    const loggedClients = new Map();
+    const loggedNames = new Map();
+    const connectedClients = new Map();
     let checkinClients = 0;
     let connectedClientsTotal = 0;
     this.measureBytes = false;
@@ -69,7 +69,6 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
     this.getLoggedClients = () => {
         return loggedClients;
     }
-    // io.set('origins', '*:*');
     this.getIo = () => {
         return io;
     }
@@ -96,8 +95,8 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
         if (!me.measureBytes) {
             return;
         }
-        var strData = JSON.stringify(data);
-        var bytes = Buffer.byteLength(strData, 'utf8');
+        let strData = JSON.stringify(data);
+        let bytes = Buffer.byteLength(strData, 'utf8');
         client.totalBytes += bytes;
         me.stats.totalBytes += bytes;
         client.lastBytes.set(client.messageCount++, { date: new Date(), bytes });
@@ -107,10 +106,10 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
             return;
         }
         let d = new Date();
-        var totalPartialBytes = 0;
+        let totalPartialBytes = 0;
         connectedClients.forEach((client, client_id) => {
             //removing last bytes mor old then 1 secconds
-            var partialBytes = 0;
+            let partialBytes = 0;
             client.lastBytes.forEach((data, key) => {
                 if (data.date < d - 1000) {
                     partialBytes += data.bytes;
@@ -137,7 +136,6 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
         connectedClients.set(client.id, client);
         connectedClientsTotal = connectedClients.size;
         addLog("(>) socket.io client connected:", client.id)
-        lastId = client.id;
 
         client.on('testSend', (data) => {
             addLog(' testSend called with', data);
@@ -146,13 +144,12 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
         });
 
         client.on('checkin', (data) => {
-            //addLog("(>) socket.io client registered:",client.id, data);
             addLog("############### [ client registered ] ###############");
             addLog("(>) ID : ", client.id);
             addLog("######################################################");
             loggedClients.set(client.id, data);
             showDataBytesUsageFromClient("checkin", client, data);
-            if (data && data.hasOwnProperty("name")) {
+            if (data?.name) {
                 loggedNames.set(client.id, data.name);
                 client.clientName = data.name;
             }
@@ -165,7 +162,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
             client.removeAllListeners();
         })
         client.on('disconnect', (reason) => {
-            var res = stateMachineServer.removeAllListener(client);
+            stateMachineServer.removeAllListener(client);
             addLog("############### [ client disconected ] ###############");
             addLog("(<) ID : ", client.id);
             if (loggedClients.has(client.id)) {
@@ -184,17 +181,19 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
                 return;
             }
             showDataBytesUsageFromClient("set", client, data);
-            var validate = data.hasOwnProperty('validate') ? data.validate : true;
-            const timeout = parseInt(data?.timeout) || 0;
-            if (timeout > 0) {
-                var res = await stateMachineServer.setTemporary(data.path, data.value, timeout, validate)
-                if (typeof ack == 'function') {
-                    ack(res)
+            const validate = data.hasOwnProperty('validate') ? data.validate : true;
+            if (useTempData) {
+                const timeout = parseInt(data?.timeout) || 0;
+                if (timeout > 0) {
+                    const res = await stateMachineServer.setTemporary(data.path, data.value, timeout, validate)
+                    if (typeof ack == 'function') {
+                        ack(res)
+                    }
+                    return;
                 }
-                return;
             }
 
-            var res = await stateMachineServer.set(data.path, data.value, validate)
+            const res = await stateMachineServer.set(data.path, data.value, validate)
             if (typeof ack == 'function') {
                 ack(res)
             }
@@ -206,16 +205,18 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
                 return;
             }
             showDataBytesUsageFromClient("reset", client, data);
-            var validate = data.hasOwnProperty('validate') ? data.validate : true;
-            const timeout = parseInt(data?.timeout) || 0;
-            if (timeout > 0) {
-                var res = await stateMachineServer.resetTemporary(data.path, data.value, timeout, validate)
-                if (typeof ack == 'function') {
-                    ack(res)
+            let validate = data.hasOwnProperty('validate') ? data.validate : true;
+            if (useTempData) {
+                const timeout = parseInt(data?.timeout) || 0;
+                if (timeout > 0) {
+                    let res = await stateMachineServer.resetTemporary(data.path, data.value, timeout, validate)
+                    if (typeof ack == 'function') {
+                        ack(res)
+                    }
+                    return;
                 }
-                return;
             }
-            var res = await stateMachineServer.reset(data.path, data.value, validate)
+            let res = await stateMachineServer.reset(data.path, data.value, validate)
             if (typeof ack == 'function') {
                 ack(res)
             }
@@ -227,7 +228,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
                 return;
             }
             showDataBytesUsageFromClient("message", client, data);
-            var res = stateMachineServer.message(data.path, data.value, data.save, data.reset == true)
+            let res = stateMachineServer.message(data.path, data.value, data.save, (data.reset === true))
             if (typeof ack == 'function') {
                 ack(res)
             }
@@ -293,7 +294,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
             if (!data.listener.hasOwnProperty('path') && data.listener.hasOwnProperty('property')) {
                 data.listener.path = data.listener.property;
             }
-            var res = stateMachineServer.addListener(data, client)
+            let res = stateMachineServer.addListener(data, client)
 
             if (!data.hasOwnProperty('ignorePreviousData')) {
                 stateMachineServer.get(data.listener.path).then((value) => {
@@ -327,7 +328,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
             if (!data.listener.hasOwnProperty('path') && data.listener.hasOwnProperty('property')) {
                 data.listener.path = data.listener.property;
             }
-            var res = stateMachineServer.addMessageListener(data, client)
+            let res = stateMachineServer.addMessageListener(data, client)
 
             if (typeof ack == 'function') {
                 ack(res)
@@ -347,7 +348,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
                 }
             }
 
-            var res = stateMachineServer.removeListener(data, client)
+            let res = stateMachineServer.removeListener(data, client)
             if (typeof ack == 'function') {
                 ack(res)
             }
@@ -366,7 +367,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
                 }
             }
 
-            var res = stateMachineServer.removeMessageListener(data, client)
+            let res = stateMachineServer.removeMessageListener(data, client)
             if (typeof ack == 'function') {
                 ack(res)
             }
@@ -374,12 +375,12 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null)
 
         client.on('removeAllListener', (ack) => {
 
-            var res = stateMachineServer.removeAllListener(client)
+            let res = stateMachineServer.removeAllListener(client)
             if (typeof ack == 'function') {
                 ack(res)
             }
         });
-        var clientIp = client.request.connection.remoteAddress;
+        let clientIp = client.request.connection.remoteAddress;
         client.emit("connectionEstabilished", JSON.stringify({ client: client.id, countConnections, clientIp }));
         countConnections++;
     });
