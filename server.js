@@ -60,7 +60,8 @@ const configInfo = {
   measureBytes: false,
   autoSave: {
     frequencyMinutes: process.env.AUTO_SAVE_FREQUENCE || 0
-  }
+  },
+  useTempData: process.env.USE_TEMP_DATA || false
 }
 
 const smsCore = new SMSCore(configInfo);
@@ -109,8 +110,8 @@ d.addItem(1, 3, "Connecteds", 15, () => {
 d.addItem(1, 4, "Listeners", 15, () => {
   return sms.getInfo().stats.listeners
 })
-d.addItem(1, 5, "reset/set/get", 15, () => {
-  return sms.getInfo().stats.reset + "/" + sms.getInfo().stats.sets + "/" + sms.getInfo().stats.gets
+d.addItem(1, 5, "rst/set/get/garb", 15, () => {
+  return sms.getInfo().stats.reset + "/" + sms.getInfo().stats.sets + "/" + sms.getInfo().stats.gets + "/" + sms.getInfo().stats.garbageDeletes
 })
 d.addItem(1, 6, "Bytes last sec", 15, () => {
   return io ? io.stats.partialBytes : "disable"

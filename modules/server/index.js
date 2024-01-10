@@ -2,7 +2,7 @@
 //this line void error: (node:10720) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added to [Socket]. Use emitter.setMaxListeners() to increase limit
 require('events').EventEmitter.prototype._maxListeners = 0;
 
-const {MangaCore} = require('@manga-js/manga-js-core');
+const { MangaCore } = require('@manga-js/manga-js-core');
 const IoServer = require('./modules/IoServer')
 const HttpServer = require('./modules/HttpServer')
 const IOClientKMock = require('./modules/data/IOClientKMock')
@@ -14,10 +14,11 @@ function SMSCore(config = null) {
   this.sms = new MangaCore({});
   this.io = null
   this.http = null
-  if(config?.connections?.http || config?.connections?.https){
+  this.useTempData = config?.useTempData
+  if (config?.connections?.http || config?.connections?.https) {
     this.http = new HttpServer(this.sms, config?.connections?.http, config?.connections?.https);
   }
-  if(ioPort){
+  if (ioPort) {
     this.io = new IoServer(this.sms, this.http, config?.connections?.cors, config?.connections?.io?.auth);
     this.io.measureBytes = (config && config.measureBytes) ? true : false;
   }
@@ -26,7 +27,7 @@ function SMSCore(config = null) {
   }
 
   this.startSocket = _ => {
-    if(!me.io){
+    if (!me.io) {
       return;
     }
     me.io.start(ioPort);
@@ -51,7 +52,7 @@ function SMSCore(config = null) {
   }
 
 
-  this.addMessageListener = (path,callBack)=>{
+  this.addMessageListener = (path, callBack) => {
     var listenerOb = {
       "listener": {
         "property": path
@@ -61,7 +62,7 @@ function SMSCore(config = null) {
 
       }
     };
-    
+
     var mockClient = new IOClientKMock(callBack);
     me.sms.addMessageListener(listenerOb, mockClient);
     return mockClient;
@@ -81,10 +82,10 @@ function SMSCore(config = null) {
     return r;
   }
   this.get = me.sms.get;
-  this.removeMessageListener = (path,client)=>{
-    me.sms.removeMessageListener({path},instanceDataFilter(client));
+  this.removeMessageListener = (path, client) => {
+    me.sms.removeMessageListener({ path }, instanceDataFilter(client));
   }
-  this.removeListener = (path,client)=>{me.sms.removeListener({path},instanceDataFilter(client))};
+  this.removeListener = (path, client) => { me.sms.removeListener({ path }, instanceDataFilter(client)) };
 
   this.set = (path, value, validate = true, dispatchEvent = true) => {
     me.sms.set(path, instanceDataFilter(value), validate, dispatchEvent)
