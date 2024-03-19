@@ -6,6 +6,20 @@ The purpose of this project is to create a state machine server to keep organize
 
 It's posible to dispose data by http protocol
 
+## Docker
+
+To easy build you need to run once:
+
+```
+sh build-docker.sh
+```
+
+To run:
+
+```
+sh run-docker.sh
+```
+
 ## ENV
 
 ```
