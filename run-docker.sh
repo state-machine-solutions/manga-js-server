@@ -1,0 +1,1 @@
+docker run -d -p 8000:80 -p 8001:8001 manga-js
