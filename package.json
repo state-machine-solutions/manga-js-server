@@ -1,6 +1,6 @@
 {
   "name": "manga-js-server",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "tms_dependencies": {},
   "description": "Project to up a manga server using http and/or socket io",
   "main": "server.js",

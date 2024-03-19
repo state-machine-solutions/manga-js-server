@@ -32,9 +32,13 @@ IO_PORT=8000
 IO_AUTH_USERNAME=test
 IO_AUTH_PASSWORD=pass
 INITIAL_DATA=./initialData.json
-AUTO_SAVE_FREQUENCE=0.1
+AUTO_SAVE_FREQUENCE=60
 HIDE_PANEL=true
 ```
+
+## Overview
+
+[Repository Overview](./repository-overview.md)
 
 ## HTTP and HTTPS
 
