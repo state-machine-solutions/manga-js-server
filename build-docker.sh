@@ -1,1 +1,1 @@
-docker build -t manga-js . 
+docker build -t manga . 
