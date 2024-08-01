@@ -1,5 +1,6 @@
 # Manga JS Server
 
+
 ![manga.js logo](https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation/blob/main/manga_logo.png?raw=true)
 
 The purpose of this project is to create a state machine server to keep organized data and be able to add listeners with socket.io in specific paths and in addition to providing a possible form of messages between socket.io clients.
