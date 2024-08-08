@@ -2,15 +2,12 @@
 let fs = require('fs');
 const SMSCore = require('./modules/server');
 const AutoSave = require('./modules/AutoSave')
-
-require('dotenv').config()
+const configInfo = require("./config/configFromEnv");
 
 // Reading initial data
 const packageInfo = require('./package.json');
 
-const appName = process.env.APP_NAME || packageInfo.name
-
-let initialData = process.env.INITIAL_DATA;
+let initialData = configInfo.initialData;
 if (typeof initialData == "string") {
   //if is string, it is the path to another config
   if (fs.existsSync(initialData)) {
@@ -18,51 +15,16 @@ if (typeof initialData == "string") {
   }
 }
 
-let version = ' v.' + packageInfo.version;
+const httpPort = configInfo.connections.http.port;
 let d = require('panel-log');
-d.appName = appName;
-d.appVersion = version;
+d.appName = configInfo.appName;
+d.appVersion = configInfo.version;
 d.setPercentComplete(1);
-if (!process.env.hidePanel) {
+if (!configInfo.hidePanel) {
   d.start();
 }
 
-const ioPort = process.env.IO_PORT || 8000
-let httpPort = process.env.HTTP_PORT || 80
-let httpsPort = process.env.HTTPS_PORT || 443
-let httpsKey = process.env.HTTPS_KEY || null
-let httpsCert = process.env.HTTPS_CERT || null
-const configInfo = {
-  appName,
-  connections: {
-    http: {
-      port: httpPort
-    },
-    https: {
-      port: httpsPort,
-      key: httpsKey,
-      cert: httpsCert
-    },
-    io: {
-      port: ioPort,
-      auth: {
-        username: process.env.IO_AUTH_USERNAME || null,
-        password: process.env.IO_AUTH_PASSWORD || null
-      }
-    },
-    cors: {
-      origin: "*"
-    }
-  },
-  attached: [],
-  initialData: process.env.INITIAL_DATA || './initialData.json',
-  hidePanel: process.env.HIDE_PANEL || false,
-  measureBytes: false,
-  autoSave: {
-    frequencyMinutes: process.env.AUTO_SAVE_FREQUENCE || 0
-  },
-  useTempData: process.env.USE_TEMP_DATA || false
-}
+
 
 const smsCore = new SMSCore(configInfo);
 
@@ -82,7 +44,7 @@ function setInitialData(data) {
   }
 }
 if (io) {
-  io.start(ioPort);
+  io.start(configInfo.connections.io.port);
 }
 if (http) {
   http.start();
@@ -101,10 +63,9 @@ d.addItem(0, 3, "garbage (tic/del)", 22, () => {
   return sms.getInfo().stats.garbageTic + "/" + sms.getInfo().stats.garbageDeletes
 })
 
-d.addItem(1, 0, "ioPort", 15, ioPort | "blocked")
+d.addItem(1, 0, "ioPort", 15, configInfo.connections.io.port | "blocked")
 let portInfo = (httpPort && http.getHttpServer()) ? httpPort : "blocked"
-portInfo += "/"
-portInfo += (httpsPort && http.getHttpsServer()) ? httpsPort : "blocked"
+
 
 d.addItem(1, 1, "http/https", 15, portInfo)
 d.addItem(1, 2, "Checkins", 15, () => {

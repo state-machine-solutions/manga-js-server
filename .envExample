@@ -1,12 +1,20 @@
 APP_NAME=Example
 HTTP_PORT=80
-HTTPS_PORT=8002
-HTTPS_KEY=
-HTTPS_CERT=
+HTTP_READ_PORT=81
+
+IO_READ_PORT=8001
+IO_READ_AUTH_USERNAME=test1
+IO_READ_AUTH_PASSWORD=pass1
+
 IO_PORT=8000
-IO_AUTH_USERNAME=test
-IO_AUTH_PASSWORD=pass
+IO_AUTH_USERNAME=test2
+IO_AUTH_PASSWORD=pass2
+
 INITIAL_DATA=./initialData.json
-AUTO_SAVE_FREQUENCE=0.1
+AUTO_SAVE_FREQUENCE=10.1
+
+# make false to run on container, true to run on local machine and debug
 HIDE_PANEL=true
+
+# If it is true make possible to set temporary data that automatic vanish after a setted time
 USE_TEMP_DATA=true

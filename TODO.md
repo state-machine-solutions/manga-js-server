@@ -1,4 +1,7 @@
+[ ] socket io port just to read
+[ ] http port just to read
 [ ] rootAccess
+[ ] http port just with api key and secrets
 [ ] private data
 [ ] player limitations
 [v] temp data - expiration time
