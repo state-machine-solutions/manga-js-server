@@ -142,8 +142,8 @@ function HttpServer(stateMachineServer, httpConfig = null, _useTempData = true) 
     app.post('/delete', callOrDeny('delete', httpDelete));
     app.post('/clear', callOrDeny('clear', httpClear));
 
-    function denyMethod{ req, res } {
-        res.status(403).send({ success: false, messages: ["Method not allowed"] })
+    function denyMethod(req, res) {
+        res.status(403).send({ success: false, messages: ["Method not allowed"] });
     }
     function callOrDeny(methodName, method) {
         if (checkPermission(methodName)) {
@@ -155,7 +155,7 @@ function HttpServer(stateMachineServer, httpConfig = null, _useTempData = true) 
         if (!hasPermission) {
             return true;
         }
-        return permission[methodName] === true;
+        return permissions[methodName] === true;
     }
 }
 function configPermissions(data = null) {
