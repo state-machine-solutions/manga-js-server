@@ -80,6 +80,7 @@ function IoServer(stateMachineServer, config = null) {
     }
     this.start = () => {
         io.listen(me.port);
+        console.log("socket.io listen ON " + me.port + " with permissions: " + me.permissions);
         addLog("socket.io listen ON " + me.port);
         //@see: https://www.npmjs.com/package/message-socket
     }
@@ -142,8 +143,8 @@ function IoServer(stateMachineServer, config = null) {
         connectedClientsTotal = connectedClients.size;
         addLog("(>) socket.io client connected:", client.id)
 
-        client.on('testSend', (data) => {
-            addLog(' testSend called with', data);
+        client.on('ping', (data) => {
+            addLog('ping called with', data);
             showDataBytesUsageFromClient("testSend", client, data);
             client.emit('testResult', data);
         });
@@ -181,6 +182,7 @@ function IoServer(stateMachineServer, config = null) {
             client.removeAllListeners();
         });
         client.on('set', async (data, ack) => {
+            if (!me.permissions.set) return;
             if (typeof data == 'string') {
                 addLog('set called - data should be an object string was given:', data)
                 return;
@@ -205,6 +207,7 @@ function IoServer(stateMachineServer, config = null) {
         });
 
         client.on('reset', async (data, ack) => {
+            if (!me.permissions.reset) return;
             if (typeof data == 'string') {
                 addLog('reset called - data should be an object string was given:', data)
                 return;
@@ -228,6 +231,7 @@ function IoServer(stateMachineServer, config = null) {
         });
 
         client.on('message', async (data, ack) => {
+            if (!me.permissions.message) return;
             if (typeof data == 'string') {
                 addLog('reset called - data should be an object string was given:', data)
                 return;
@@ -239,6 +243,7 @@ function IoServer(stateMachineServer, config = null) {
             }
         });
         client.on('clear', async (data, ack) => {
+            if (!me.permissions.clear) return;
             if (typeof data == 'string') {
                 addLog('clear called - data should be an object string was given:', data)
                 return;
@@ -249,10 +254,8 @@ function IoServer(stateMachineServer, config = null) {
                 ack(true)
             }
         });
-
-
-
         client.on('get', (data, ack) => {
+            if (!me.permissions.get) return;
             if (typeof data == 'string') {
                 addLog('get called - data should be an object string was given:', data)
                 return;
@@ -265,8 +268,8 @@ function IoServer(stateMachineServer, config = null) {
             })
 
         });
-
         client.on('delete', (data, ack) => {
+            if (!me.permissions.delete) return;
             if (typeof data == 'string') {
                 addLog('delete called - data should be an object string was given:', data)
                 return;
@@ -279,9 +282,8 @@ function IoServer(stateMachineServer, config = null) {
             })
 
         });
-
         client.on('addListener', (data, ack) => {
-
+            if (!me.permissions.addListener) return;
             if (typeof data == 'string') {
                 addLog('addListener called - data should be an object string was given:', data)
                 try {
@@ -313,9 +315,8 @@ function IoServer(stateMachineServer, config = null) {
                 ack(res)
             }
         });
-
         client.on('addMessageListener', (data, ack) => {
-
+            if (!me.permissions.addListener) return;
             if (typeof data == 'string') {
                 addLog('addMessageListener called - data should be an object string was given:', data)
                 try {
@@ -339,8 +340,8 @@ function IoServer(stateMachineServer, config = null) {
                 ack(res)
             }
         });
-
         client.on('rmListener', (data, ack) => {
+            if (!me.permissions.addListener) return;
             if (typeof data == 'string') {
                 addLog('removeListener called - data should be an object string was given:', data)
                 try {
@@ -358,8 +359,8 @@ function IoServer(stateMachineServer, config = null) {
                 ack(res)
             }
         });
-
         client.on('removeMessageListener', (data, ack) => {
+            if (!me.permissions.addListener) return;
             if (typeof data == 'string') {
                 addLog('removeListener called - data should be an object string was given:', data)
                 try {
@@ -377,9 +378,8 @@ function IoServer(stateMachineServer, config = null) {
                 ack(res)
             }
         });
-
         client.on('removeAllListener', (ack) => {
-
+            if (!me.permissions.addListener) return;
             let res = stateMachineServer.removeAllListener(client)
             if (typeof ack == 'function') {
                 ack(res)

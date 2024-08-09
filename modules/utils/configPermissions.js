@@ -7,6 +7,7 @@ function configPermissions(data = null) {
     message: true,
     delete: true,
     clear: true,
+    addListener: true,
     toString() {
       let r = [];
       for (let i in permissions) {

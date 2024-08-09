@@ -4,9 +4,10 @@ const packageInfo = require('../package.json');
 const appName = process.env.APP_NAME || packageInfo.name
 let version = ' v.' + packageInfo.version;
 
-const ioPort = process.env.IO_PORT || 8000
+const ioReadPort = process.env.IO_READ_PORT || 8000
+const ioWritePort = process.env.IO_WRITE_PORT || ioReadPort + 1
 let httpReadPort = process.env.HTTP_READ_PORT || 80
-let httpWritePort = process.env.HTTP_WRITE_PORT || 81
+let httpWritePort = process.env.HTTP_WRITE_PORT || httpReadPort + 1
 const connections = [];
 if (httpReadPort) {
   connections.push({
@@ -34,7 +35,8 @@ if (httpWritePort) {
       reset: true,
       message: true,
       delete: true,
-      clear: true
+      clear: true,
+      addListener: true
     },
     auth: {
       username: process.env.AUTH_USERNAME || null,
@@ -42,14 +44,24 @@ if (httpWritePort) {
     }
   });
 }
-if (ioPort) {
+if (ioReadPort) {
   const auth = process.env.AUTH_USERNAME ? {
     username: process.env.AUTH_USERNAME,
     password: process.env.AUTH_PASSWORD
   } : null;
   connections.push({
     type: "io",
-    port: ioPort,
+    port: ioReadPort,
+    permissions: {
+      ping: true,
+      get: true,
+      set: false,
+      reset: false,
+      message: false,
+      delete: false,
+      clear: false,
+      addListener: true
+    },
     auth
   });
 }
@@ -57,6 +69,7 @@ const configInfo = {
   appName,
   version,
   connections,
+
   cors: {
     origin: "*"
   },

@@ -10,7 +10,10 @@ function HttpServer(stateMachineServer, config = null) {
     const app = express();
     this.port = config?.port
     this.config = config;
+    const apiToken = config?.apiToken;
+    const hasApiToken = !!apiToken;
     this.permissions = configPermissions(config?.permissions);
+    this.permissions.addListener = false;
     const hasPermission = !!(config?.permissions)
     const httpServer = http.createServer(app);
 
@@ -26,7 +29,7 @@ function HttpServer(stateMachineServer, config = null) {
     this.start = () => {
         if (me.port && httpServer) {
             httpServer.listen(me.port, () => {
-                console.log("HTTP server started on httpPort " + me.port);
+                console.log("HTTP server started on httpPort " + me.port + " with permissions: " + me.permissions);
             })
         }
     }
@@ -149,6 +152,19 @@ function HttpServer(stateMachineServer, config = null) {
         res.status(403).send({ success: false, messages: ["Method not allowed"] });
     }
     function callOrDeny(methodName, method) {
+        if (hasApiToken) {
+            return (req, res) => {
+                if (req.headers?.api_token !== apiToken) {
+                    res.status(403).send({ success: false, messages: ["Invalid token"] });
+                    return;
+                }
+                if (checkPermission(methodName)) {
+                    method(req, res);
+                } else {
+                    res.status(403).send({ success: false, messages: ["Method not allowed"] });
+                }
+            }
+        }
         if (checkPermission(methodName)) {
             return method;
         }
