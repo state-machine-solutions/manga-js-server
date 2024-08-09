@@ -15,8 +15,8 @@ function SMSCore(config = null) {
   this.io = null
   this.http = null
   this.useTempData = config?.useTempData
-  if (config?.connections?.http || config?.connections?.https) {
-    this.http = new HttpServer(this.sms, config?.connections?.http, config?.connections?.https, config?.useTempData);
+  if (config?.connections?.http) {
+    this.http = new HttpServer(this.sms, config?.connections?.http, config?.useTempData);
   }
   if (ioPort) {
     this.io = new IoServer(this.sms, this.http, config?.connections?.cors, config?.connections?.io?.auth, config?.useTempData);
