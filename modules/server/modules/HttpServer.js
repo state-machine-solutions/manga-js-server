@@ -1,15 +1,18 @@
 const http = require('http');
 const cors = require('cors')
 const bodyParser = require("body-parser");
+const configPermissions = require('../../utils/configPermissions');
 
-function HttpServer(stateMachineServer, httpConfig = null, _useTempData = true) {
-    const useTempData = _useTempData;
+function HttpServer(stateMachineServer, config = null) {
+    const me = this;
+    const useTempData = config?.useTempData == true;
     const express = require('express');
     const app = express();
-    let httpPort = httpConfig?.port
-    const permissions = configPermissions(httpConfig?.permissions);
-    const hasPermission = !!(httpConfig?.permissions)
-    let httpServer = http.createServer(app);
+    this.port = config?.port
+    this.config = config;
+    this.permissions = configPermissions(config?.permissions);
+    const hasPermission = !!(config?.permissions)
+    const httpServer = http.createServer(app);
 
     this.getHttpServer = () => {
         return httpServer;
@@ -21,9 +24,9 @@ function HttpServer(stateMachineServer, httpConfig = null, _useTempData = true) 
     app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
     this.start = () => {
-        if (httpPort && httpServer) {
-            httpServer.listen(httpPort, () => {
-                console.log("HTTP server started on httpPort " + httpPort);
+        if (me.port && httpServer) {
+            httpServer.listen(me.port, () => {
+                console.log("HTTP server started on httpPort " + me.port);
             })
         }
     }
@@ -155,26 +158,9 @@ function HttpServer(stateMachineServer, httpConfig = null, _useTempData = true) 
         if (!hasPermission) {
             return true;
         }
-        return permissions[methodName] === true;
+        return me.permissions[methodName] === true;
     }
 }
-function configPermissions(data = null) {
-    const permissions = {
-        ping: true,
-        get: true,
-        set: true,
-        reset: true,
-        message: true,
-        delete: true,
-        clear: true
-    }
-    if (!data) {
-        return permissions;
-    }
-    for (let i in permissions) {
-        permissions[i] = data[i] === false ? false : true;
-    }
-    return permissions;
-}
+
 
 module.exports = HttpServer;

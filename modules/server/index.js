@@ -6,33 +6,39 @@ const { MangaCore } = require('@manga-js/manga-js-core');
 const IoServer = require('./modules/IoServer')
 const HttpServer = require('./modules/HttpServer')
 const IOClientKMock = require('./modules/data/IOClientKMock')
-
-
+const AutoSave = require('../AutoSave')
+const fs = require('fs');
+const classes = {
+  http: HttpServer,
+  io: IoServer
+}
 function SMSCore(config = null) {
   const me = this;
-  const ioPort = config?.connections?.io
   this.sms = new MangaCore({});
-  this.io = null
-  this.http = null
-  this.useTempData = config?.useTempData
-  if (config?.connections?.http) {
-    this.http = new HttpServer(this.sms, config?.connections?.http, config?.useTempData);
-  }
-  if (ioPort) {
-    this.io = new IoServer(this.sms, this.http, config?.connections?.cors, config?.connections?.io?.auth, config?.useTempData);
-    this.io.measureBytes = (config?.measureBytes !== false);
-  }
-  this.startHttp = _ => {
-    me.http.start();
-  }
-
-  this.startSocket = _ => {
-    if (!me.io) {
-      return;
+  this.connections = config?.connections;
+  config?.connections?.forEach(c => {
+    if (classes[c.type]) {
+      c.instance = new classes[c.type](this.sms, c);
     }
-    me.io.start(ioPort);
+  });
+
+  let initialData = config.initialData;
+  if (typeof initialData == "string") {
+    //if is string, it is the path to another config
+    if (fs.existsSync(initialData)) {
+      initialData = JSON.parse(fs.readFileSync(initialData, 'utf8'));
+    }
+  }
+  if (initialData && typeof (initialData) == 'object') {
+    setInitialData(initialData);
   }
 
+
+  this.start = _ => {
+    me.connections.forEach(c => {
+      c.instance.start();
+    });
+  }
   this.addListener = (path, callback, updateMode) => {
     const listenerOb = {
       "listener": {
@@ -70,7 +76,7 @@ function SMSCore(config = null) {
 
 
   this.addOnChangeLength = (_property, callBack) => {
-    this.addListener(_property, callBack, "onChangeLength");
+    me.addListener(_property, callBack, "onChangeLength");
   }
 
   function instanceDataFilter(data) {
@@ -102,6 +108,13 @@ function SMSCore(config = null) {
   this.setValidateFN = (fn) => {
     this.sms.setValidateFN(fn);
   }
-
+  function setInitialData(data) {
+    for (let i in data) {
+      me.sms.set(i, data[i], false);
+    }
+  }
+  if (config?.autoSave?.frequencyMinutes > 0) {
+    new AutoSave(this, config.initialData, config.autoSave.frequencyMinutes)
+  }
 }
 module.exports = SMSCore;

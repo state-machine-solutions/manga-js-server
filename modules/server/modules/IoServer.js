@@ -2,14 +2,20 @@ const socketIO = require('socket.io');
 const express = require('express');
 const socketAuth = require('socketio-auth');
 const app = express();
-function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null, _useTempData = true) {
+const configPermissions = require('../../utils/configPermissions');
+
+function IoServer(stateMachineServer, config = null) {
+    const cors = config?.cors;
+    const auth = config?.auth;
     const me = this;
-    const useTempData = _useTempData;
-    let port;
-    if (!httpServer) {
-        httpServer = require('http').createServer(app)
+    this.permissions = configPermissions(config?.permissions);
+    const useTempData = config?.useTempData == true;
+    if (!config?.port) {
+        throw new Error("port is required for socket io");
     }
-    httpServer = require('http').createServer(app)
+    this.config = config;
+    this.port = config?.port;
+    const httpServer = require('http').createServer(app)
     let io = socketIO(httpServer, {
         cors
         // cors: {
@@ -42,7 +48,7 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null,
     const connectedClients = new Map();
     let checkinClients = 0;
     let connectedClientsTotal = 0;
-    this.measureBytes = false;
+    this.measureBytes = config?.measureBytes == true;
     this.stats = {
         totalBytes: 0,
         partialBytes: 0
@@ -72,10 +78,9 @@ function IoServer(stateMachineServer, httpServer = null, cors = {}, auth = null,
     this.getIo = () => {
         return io;
     }
-    this.start = (_port) => {
-        port = _port
-        io.listen(port);
-        addLog("socket.io listen ON " + port);
+    this.start = () => {
+        io.listen(me.port);
+        addLog("socket.io listen ON " + me.port);
         //@see: https://www.npmjs.com/package/message-socket
     }
     this.restart = () => {
