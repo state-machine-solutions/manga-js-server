@@ -12,8 +12,10 @@
   "author": "Renato Miawaki and Alan Lucian",
   "license": "Apache-2.0",
   "dependencies": {
+    "@google-cloud/storage": "^7.12.1",
     "@manga-js/manga-js-client": "^1.2.0",
     "@manga-js/manga-js-core": "^1.3.7",
+    "aws-sdk": "^2.1674.0",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

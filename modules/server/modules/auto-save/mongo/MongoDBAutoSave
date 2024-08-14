@@ -1,0 +1,124 @@
+const { MongoClient } = require('mongodb');
+
+class MongoDBAutoSave {
+  constructor(uri, dbName, collectionName, key, options = {}) {
+    this.client = new MongoClient(uri, options);
+    this.dbName = dbName;
+    this.collectionName = collectionName;
+    this.key = key; // Unique identifier for the documents
+  }
+
+  async connect() {
+    if (!this.client.isConnected()) {
+      await this.client.connect();
+    }
+    this.db = this.client.db(this.dbName);
+    this.collection = this.db.collection(this.collectionName);
+  }
+
+  async saveData(data) {
+    try {
+      await this.connect();
+
+      // Clear the existing data
+      await this.clearData();
+
+      // Flatten and chunk the data
+      const documents = this.flattenAndChunkData(data);
+
+      // Insert each document into the collection
+      await Promise.all(documents.map(doc => this.collection.insertOne(doc)));
+
+      console.log('Data successfully saved to MongoDB.');
+    } catch (e) {
+      console.log('autosave error:', e);
+    }
+  }
+
+  async getData() {
+    try {
+      await this.connect();
+
+      // Retrieve all documents with the same key
+      const documents = await this.collection.find({ key: this.key }).toArray();
+
+      // Combine the documents into a single object
+      const combinedData = documents.reduce((acc, doc) => {
+        return { ...acc, ...doc.data };
+      }, {});
+
+      // Rebuild the original structure from combinedData
+      const rebuiltData = this.rebuildData(combinedData);
+
+      return rebuiltData;
+    } catch (e) {
+      console.log('getData error:', e);
+      return null;
+    }
+  }
+
+  async clearData() {
+    try {
+      await this.connect();
+      await this.collection.deleteMany({ key: this.key });
+    } catch (e) {
+      console.log('clearData error:', e);
+    }
+  }
+
+  flattenAndChunkData(data) {
+    const documents = [];
+    let currentDocument = { key: this.key, data: {} };
+    const maxDocumentSize = 16000000; // 16 MB in bytes
+
+    const addDocumentIfNecessary = () => {
+      if (Buffer.byteLength(JSON.stringify(currentDocument)) > maxDocumentSize) {
+        documents.push(currentDocument);
+        currentDocument = { key: this.key, data: {} };
+      }
+    };
+
+    const traverse = (obj, currentKey) => {
+      if (typeof obj === 'object' && obj !== null) {
+        for (const [key, value] of Object.entries(obj)) {
+          const newKey = currentKey ? `${currentKey}.${key}` : key;
+          traverse(value, newKey);
+        }
+      } else {
+        const newItem = { [currentKey]: obj };
+        currentDocument.data = { ...currentDocument.data, ...newItem };
+        addDocumentIfNecessary();
+      }
+    };
+
+    traverse(data, '');
+
+    // Add the last document if it has any data
+    if (Object.keys(currentDocument.data).length > 0) {
+      documents.push(currentDocument);
+    }
+
+    return documents;
+  }
+
+  rebuildData(data) {
+    // Rebuilds the original nested structure from the flat combined data
+    const result = {};
+    for (const [key, value] of Object.entries(data)) {
+      const keys = key.split('.');
+      keys.reduce((acc, part, index) => {
+        if (index === keys.length - 1) {
+          acc[part] = value;
+        } else {
+          if (!acc[part]) {
+            acc[part] = {};
+          }
+          return acc[part];
+        }
+      }, result);
+    }
+    return result;
+  }
+}
+
+module.exports = MongoDBAutoSave;

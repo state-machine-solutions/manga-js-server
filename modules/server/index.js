@@ -6,7 +6,7 @@ const { MangaCore } = require('@manga-js/manga-js-core');
 const IoServer = require('./modules/IoServer')
 const HttpServer = require('./modules/HttpServer')
 const IOClientKMock = require('./modules/data/IOClientKMock')
-const AutoSave = require('../AutoSave')
+const LocalFileAutoSave = require('../LocalFileAutoSave')
 const fs = require('fs');
 const classes = {
   http: HttpServer,
@@ -110,11 +110,11 @@ function SMSCore(config = null) {
   }
   function setInitialData(data) {
     for (let i in data) {
-      me.sms.set(i, data[i], false);
+      me.sms.reset(i, data[i], false);
     }
   }
   if (config?.autoSave?.frequencyMinutes > 0) {
-    new AutoSave(this, config.initialData, config.autoSave.frequencyMinutes)
+    new LocalFileAutoSave(this, config.initialData, config.autoSave.frequencyMinutes)
   }
 }
 module.exports = SMSCore;

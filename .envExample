@@ -17,6 +17,7 @@ IO_WRITE_AUTH_USERNAME=test2
 IO_WRITE_AUTH_PASSWORD=pass2
 IO_WRITE_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
 
+AUTO_SAVE_MODE="fs|aws-bucket|aws-dynamo|gcp-bucket|gcp-datastore"
 INITIAL_DATA=./initialData.json
 AUTO_SAVE_FREQUENCE=10.1
 
