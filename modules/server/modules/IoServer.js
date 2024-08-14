@@ -146,7 +146,7 @@ function IoServer(stateMachineServer, config = null) {
         client.on('ping', (data) => {
             addLog('ping called with', data);
             showDataBytesUsageFromClient("testSend", client, data);
-            client.emit('testResult', data);
+            client.emit('onPing', { received: data, permissions: me.permissions });
         });
 
         client.on('checkin', (data) => {

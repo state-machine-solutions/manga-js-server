@@ -34,31 +34,31 @@ function HttpServer(stateMachineServer, config = null) {
         }
     }
     const httpPing = (req, res) => {
-        res.json({ success: true, info: stateMachineServer.getInfo() });
+        res.json({ success: true, data: { info: stateMachineServer.getInfo(), permissions: me.permissions } });
     }
     const httpGet = (req, res) => {
         if (!req.query.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["path is required"] }))
+            res.status(400).send({ messages: ["path is required"] })
             return;
         }
         console.log('HTTP get : ' + req.query?.path)
         stateMachineServer.get(req.query.path).then((data) => {
-            const result = JSON.stringify(data);
+            const result = (data);
             res.setHeader('Content-Type', 'application/json');
-            res.status(200).end(result);
+            res.status(200).send(result);
         });
 
     }
     const httpPost = (req, res) => {
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["path is required"] }))
+            res.status(400).send({ messages: ["path is required"] })
             return;
         }
         if (!req.body.hasOwnProperty('value')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["value is required"] }))
+            res.status(400).send({ messages: ["value is required"] })
             return;
         }
         if (useTempData) {
@@ -67,25 +67,25 @@ function HttpServer(stateMachineServer, config = null) {
                 stateMachineServer.setTemporary(req.body.path, req.body.value, timeout)
                     .then((r) => {
                         res.setHeader('Content-Type', 'application/json');
-                        res.end(JSON.stringify(r));
+                        res.send(r);
                     });
                 return;
             }
         }
         stateMachineServer.set(req.body.path, req.body.value).then((r) => {
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(r));
+            res.send(r);
         });
     }
     const httpPut = (req, res) => {
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["path is required"] }))
+            res.status(400).send({ messages: ["path is required"] })
             return;
         }
         if (!req.body.hasOwnProperty('value')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["value is required"] }))
+            res.status(400).send({ messages: ["value is required"] })
             return;
         }
         if (useTempData) {
@@ -94,7 +94,7 @@ function HttpServer(stateMachineServer, config = null) {
                 stateMachineServer.resetTemporary(req.body.path, req.body.value, timeout)
                     .then((r) => {
                         res.setHeader('Content-Type', 'application/json');
-                        res.end(JSON.stringify(r));
+                        res.send(r);
                     });
                 return;
             }
@@ -102,42 +102,59 @@ function HttpServer(stateMachineServer, config = null) {
         stateMachineServer.reset(req.body.path, req.body.value)
             .then((r) => {
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify(r));
+                res.send(r);
             });
     }
     const httpMessage = (req, res) => {
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["path is required"] }))
+            res.status(400).send({ messages: ["path is required"] })
             return;
         }
         if (!req.body.hasOwnProperty('value')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).end(JSON.stringify({ messages: ["value is required"] }))
+            res.status(400).send({ messages: ["value is required"] })
             return;
         }
         const save = req.body?.save || false;
         stateMachineServer.message(req.body.path, req.body.value, save).then((r) => {
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(r));
+            res.send(r);
         });
     }
     const httpDelete = (req, res) => {
         stateMachineServer.delete(req.body.path).then((r) => {
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(r));
+            res.send(r);
         });
     }
+    const confirmationCode = {}
     const httpClear = (req, res) => {
-        stateMachineServer.clear();
+        const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        //normalize clientIp to create an valid variable name string
+        const clientIpNormalized = clientIp.replace(/[^a-zA-Z0-9]/g, '_');
+        //check if was sent a confirmation code
+        if (req.body?.confirmationCode) {
+            if (confirmationCode[clientIpNormalized] === req.body.confirmationCode) {
+                stateMachineServer.clear();
+                res.setHeader('Content-Type', 'application/json');
+                res.send({ success: true });
+                return;
+            }
+        }
+        //generate a confirmation code with 6 digits hexadecimal
+        const code = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
+        confirmationCode[clientIpNormalized] = code;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ success: true }));
+        res.status(403);
+        res.send({ success: false, data: { confirmationCode: code }, messages: ["Confirm action sending the confirmation code"] });
     }
     // REST
-    app.get('/', httpGet);
-    app.post('/', httpPost);
-    app.put('/', httpPut);
-    app.delete('/', httpDelete);
+    app.get('/', callOrDeny('get', httpGet));
+    app.post('/', callOrDeny('set', httpPost));
+    app.put('/', callOrDeny('reset', httpPut));
+    app.delete('/', callOrDeny('delete', httpDelete));
+    app.delete('/all', callOrDeny('delete', httpClear));
 
     //named functions
     app.get('/ping', callOrDeny('ping', httpPing));
@@ -146,7 +163,9 @@ function HttpServer(stateMachineServer, config = null) {
     app.post('/reset', callOrDeny('reset', httpPut));
     app.post('/message', callOrDeny('message', httpMessage));
     app.post('/delete', callOrDeny('delete', httpDelete));
+    app.delete('/delete', callOrDeny('delete', httpDelete));
     app.post('/clear', callOrDeny('clear', httpClear));
+    app.delete('/clear', callOrDeny('clear', httpClear));
 
     function denyMethod(req, res) {
         res.status(403).send({ success: false, messages: ["Method not allowed"] });
