@@ -1,28 +1,25 @@
 const http = require('http');
-const cors = require('cors')
-const bodyParser = require("body-parser");
+const cors = require('cors');
 const configPermissions = require('../../utils/configPermissions');
+const expressRateLimit = require('express-rate-limit');
 
 function HttpServer(stateMachineServer, config = null) {
     const me = this;
-    const useTempData = config?.useTempData == true;
+    const useTempData = config?.useTempData === true;
     const express = require('express');
     const app = express();
-    this.port = config?.port
+    this.port = config?.port;
     this.config = config;
     const apiToken = config?.apiToken;
     const hasApiToken = !!apiToken;
     this.permissions = configPermissions(config?.permissions);
     this.permissions.addListener = false;
-    const hasPermission = !!(config?.permissions)
+    const hasPermission = !!(config?.permissions);
     const httpServer = http.createServer(app);
 
-    this.getHttpServer = () => {
-        return httpServer;
-    }
-    app.use(bodyParser.json({ limit: "50mb" }));
-    app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
-    app.use(cors())
+    this.getHttpServer = () => httpServer;
+
+    app.use(cors());
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -30,35 +27,36 @@ function HttpServer(stateMachineServer, config = null) {
         if (me.port && httpServer) {
             httpServer.listen(me.port, () => {
                 console.log("HTTP server started on httpPort " + me.port + " with permissions: " + me.permissions);
-            })
+            });
         }
-    }
+    };
+
     const httpPing = (req, res) => {
         res.json({ success: true, data: { info: stateMachineServer.getInfo(), permissions: me.permissions } });
-    }
+    };
+
     const httpGet = (req, res) => {
         if (!req.query.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["path is required"] })
+            res.status(400).send({ messages: ["path is required"] });
             return;
         }
-        console.log('HTTP get : ' + req.query?.path)
+        console.log('HTTP get : ' + req.query?.path);
         stateMachineServer.get(req.query.path).then((data) => {
-            const result = (data);
             res.setHeader('Content-Type', 'application/json');
-            res.status(200).send(result);
+            res.status(200).send(data);
         });
+    };
 
-    }
     const httpPost = (req, res) => {
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["path is required"] })
+            res.status(400).send({ messages: ["path is required"] });
             return;
         }
         if (!req.body.hasOwnProperty('value')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["value is required"] })
+            res.status(400).send({ messages: ["value is required"] });
             return;
         }
         if (useTempData) {
@@ -76,16 +74,17 @@ function HttpServer(stateMachineServer, config = null) {
             res.setHeader('Content-Type', 'application/json');
             res.send(r);
         });
-    }
+    };
+
     const httpPut = (req, res) => {
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["path is required"] })
+            res.status(400).send({ messages: ["path is required"] });
             return;
         }
         if (!req.body.hasOwnProperty('value')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["value is required"] })
+            res.status(400).send({ messages: ["value is required"] });
             return;
         }
         if (useTempData) {
@@ -104,16 +103,17 @@ function HttpServer(stateMachineServer, config = null) {
                 res.setHeader('Content-Type', 'application/json');
                 res.send(r);
             });
-    }
+    };
+
     const httpMessage = (req, res) => {
         if (!req.body.hasOwnProperty('path')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["path is required"] })
+            res.status(400).send({ messages: ["path is required"] });
             return;
         }
         if (!req.body.hasOwnProperty('value')) {
             res.setHeader('Content-Type', 'application/json');
-            res.status(400).send({ messages: ["value is required"] })
+            res.status(400).send({ messages: ["value is required"] });
             return;
         }
         const save = req.body?.save || false;
@@ -121,19 +121,19 @@ function HttpServer(stateMachineServer, config = null) {
             res.setHeader('Content-Type', 'application/json');
             res.send(r);
         });
-    }
+    };
+
     const httpDelete = (req, res) => {
         stateMachineServer.delete(req.body.path).then((r) => {
             res.setHeader('Content-Type', 'application/json');
             res.send(r);
         });
-    }
-    const confirmationCode = {}
+    };
+
+    const confirmationCode = {};
     const httpClear = (req, res) => {
         const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        //normalize clientIp to create an valid variable name string
         const clientIpNormalized = clientIp.replace(/[^a-zA-Z0-9]/g, '_');
-        //check if was sent a confirmation code
         if (req.body?.confirmationCode) {
             if (confirmationCode[clientIpNormalized] === req.body.confirmationCode) {
                 stateMachineServer.clear();
@@ -142,21 +142,28 @@ function HttpServer(stateMachineServer, config = null) {
                 return;
             }
         }
-        //generate a confirmation code with 6 digits hexadecimal
         const code = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
         confirmationCode[clientIpNormalized] = code;
         res.setHeader('Content-Type', 'application/json');
         res.status(403);
         res.send({ success: false, data: { confirmationCode: code }, messages: ["Confirm action sending the confirmation code"] });
-    }
-    // REST
+    };
+
+    const rateLimiter = expressRateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        message: 'Too many requests from this IP, please try again later.',
+        statusCode: 429,
+    });
+
+    app.use(rateLimiter);
+
     app.get('/', callOrDeny('get', httpGet));
     app.post('/', callOrDeny('set', httpPost));
     app.put('/', callOrDeny('reset', httpPut));
     app.delete('/', callOrDeny('delete', httpDelete));
     app.delete('/all', callOrDeny('delete', httpClear));
 
-    //named functions
     app.get('/ping', callOrDeny('ping', httpPing));
     app.get('/get', callOrDeny('get', httpGet));
     app.post('/set', callOrDeny('set', httpPost));
@@ -170,12 +177,13 @@ function HttpServer(stateMachineServer, config = null) {
     function denyMethod(req, res) {
         res.status(403).send({ success: false, messages: ["Method not allowed"] });
     }
+
     function callOrDeny(methodName, method) {
         if (hasApiToken) {
             return (req, res) => {
                 const authToken = req.headers?.authorization?.replace('Bearer ', '');
-                const apiToken = req.headers?.api_token || authToken;
-                if (req.headers?.api_token !== apiToken) {
+                const apiTokenSent = req.headers?.api_token || authToken;
+                if (apiTokenSent !== apiToken) {
                     res.status(403).send({ success: false, messages: ["Invalid token"] });
                     return;
                 }
@@ -184,13 +192,14 @@ function HttpServer(stateMachineServer, config = null) {
                 } else {
                     res.status(403).send({ success: false, messages: ["Method not allowed"] });
                 }
-            }
+            };
         }
         if (checkPermission(methodName)) {
             return method;
         }
         return denyMethod;
     }
+
     function checkPermission(methodName) {
         if (!hasPermission) {
             return true;
@@ -198,6 +207,5 @@ function HttpServer(stateMachineServer, config = null) {
         return me.permissions[methodName] === true;
     }
 }
-
 
 module.exports = HttpServer;
