@@ -154,6 +154,8 @@ function HttpServer(stateMachineServer, config = null) {
     function callOrDeny(methodName, method) {
         if (hasApiToken) {
             return (req, res) => {
+                const authToken = req.headers?.authorization?.replace('Bearer ', '');
+                const apiToken = req.headers?.api_token || authToken;
                 if (req.headers?.api_token !== apiToken) {
                     res.status(403).send({ success: false, messages: ["Invalid token"] });
                     return;

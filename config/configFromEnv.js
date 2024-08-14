@@ -21,7 +21,8 @@ if (httpReadPort) {
       message: false,
       delete: false,
       clear: false
-    }
+    },
+    apiToken: process.env.HTTP_READ_AUTH_API_TOKEN || null,
   })
 }
 if (httpWritePort) {
@@ -38,16 +39,13 @@ if (httpWritePort) {
       clear: true,
       addListener: true
     },
-    auth: {
-      username: process.env.AUTH_USERNAME || null,
-      password: process.env.AUTH_PASSWORD
-    }
+    apiToken: process.env.HTTP_WRITE_AUTH_API_TOKEN || null,
   });
 }
 if (ioReadPort) {
-  const auth = process.env.AUTH_USERNAME ? {
-    username: process.env.AUTH_USERNAME,
-    password: process.env.AUTH_PASSWORD
+  const auth = process.env.IO_READ_AUTH_USERNAME ? {
+    username: process.env.IO_READ_AUTH_USERNAME,
+    password: process.env.IO_READ_AUTH_PASSWORD
   } : null;
   connections.push({
     type: "io",
@@ -60,6 +58,27 @@ if (ioReadPort) {
       message: false,
       delete: false,
       clear: false,
+      addListener: true
+    },
+    auth
+  });
+}
+if (ioWritePort) {
+  const auth = process.env.IO_WRITE_AUTH_USERNAME ? {
+    username: process.env.IO_WRITE_AUTH_USERNAME,
+    password: process.env.IO_WRITE_AUTH_PASSWORD
+  } : null;
+  connections.push({
+    type: "io",
+    port: ioWritePort,
+    permissions: {
+      ping: true,
+      get: true,
+      set: true,
+      reset: true,
+      message: true,
+      delete: true,
+      clear: true,
       addListener: true
     },
     auth

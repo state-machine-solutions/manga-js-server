@@ -3,9 +3,6 @@ let fs = require('fs');
 const SMSCore = require('./modules/server');
 const configInfo = require("./config/configFromEnv");
 
-// Reading initial data
-const packageInfo = require('./package.json');
-
 let d = require('panel-log');
 
 const smsCore = new SMSCore(configInfo);
