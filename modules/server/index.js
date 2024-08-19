@@ -6,7 +6,7 @@ const { MangaCore } = require('@manga-js/manga-js-core');
 const IoServer = require('./modules/IoServer')
 const HttpServer = require('./modules/HttpServer')
 const IOClientKMock = require('./modules/data/IOClientKMock')
-const LocalFileAutoSave = require('../LocalFileAutoSave')
+const LocalFileAutoSave = require('./modules/auto-save/fs/LocalFileAutoSave')
 const fs = require('fs');
 const classes = {
   http: HttpServer,
