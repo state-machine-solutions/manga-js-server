@@ -157,12 +157,12 @@ function HttpServer(stateMachineServer, config = null) {
     });
 
     app.use(rateLimiter);
-
-    app.get('/', callOrDeny('get', httpGet));
-    app.post('/', callOrDeny('set', httpPost));
-    app.put('/', callOrDeny('reset', httpPut));
-    app.delete('/', callOrDeny('delete', httpDelete));
-    app.delete('/all', callOrDeny('delete', httpClear));
+    const httpRestPath = config?.httpRestPath || '/rest';
+    app.get(`${httpRestPath}/*`, restResolvePath(callOrDeny('get', httpGet)));
+    app.post(`${httpRestPath}/*`, restResolvePath(callOrDeny('set', httpPost)));
+    app.put(`${httpRestPath}/*`, restResolvePath(callOrDeny('reset', httpPut)));
+    app.delete(`${httpRestPath}/*`, restResolvePath(callOrDeny('delete', httpDelete)));
+    // app.delete(`${httpRestPath}/all`, restResolvePath(callOrDeny('delete', httpClear)));
 
     app.get('/ping', callOrDeny('ping', httpPing));
     app.get('/get', callOrDeny('get', httpGet));
@@ -177,7 +177,20 @@ function HttpServer(stateMachineServer, config = null) {
     function denyMethod(req, res) {
         res.status(403).send({ success: false, messages: ["Method not allowed"] });
     }
+    function restResolvePath(method) {
+        return (req, res) => {
+            let pathName = "body";
+            if (req.method === 'GET') {
+                pathName = "query";
+            }
 
+            req[pathName].path = req.url.replace(`${httpRestPath}/`, '').split("?")[0].replaceAll("/", ".");
+            if (req.method === 'DELETE' && !req[pathName].path) {
+                return httpClear(req, res);
+            }
+            return method(req, res);
+        }
+    }
     function callOrDeny(methodName, method) {
         if (hasApiToken) {
             return (req, res) => {

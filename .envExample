@@ -25,3 +25,4 @@ HIDE_PANEL=true
 
 # If it is true make possible to set temporary data that automatic vanish after a setted time
 USE_TEMP_DATA=true
+HTTP_REST_PATH="/rest"
