@@ -1,10 +1,8 @@
 APP_NAME=Example
 HTTP_READ_PORT=80
-HTTP_READ_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
 HTTP_READ_AUTH_API_TOKEN=abc123
 
 HTTP_WRITE_PORT=81
-HTTP_WRITE_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
 HTTP_WRITE_AUTH_API_TOKEN=abc1234
 
 IO_READ_PORT=8000
@@ -25,3 +23,4 @@ HIDE_PANEL=true
 
 # If it is true make possible to set temporary data that automatic vanish after a setted time
 USE_TEMP_DATA=true
+HTTP_REST_PATH="/rest"

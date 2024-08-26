@@ -88,7 +88,7 @@ const configInfo = {
   appName,
   version,
   connections,
-
+  httpRestPath: process.env.HTTP_REST_PATH || '/rest',
   cors: {
     origin: "*"
   },
