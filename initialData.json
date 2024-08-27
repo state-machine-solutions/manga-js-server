@@ -1,1 +1,1 @@
-{"info":{"version":"1.0.0"},"anythingYouWantHere":{},"users":{"id_1":{"coords":{"method":"SetEntityCoords","parameters":["me",200,5417,541]}}},"test":"test 2024-02-15T12:25:11.866Z","a":{"b":{"c":"test 2024-02-15T12:53:11.719Z"}},"localiza":{"car":{"c1":{"position":{"lat":2.344343,"lng":-2.0233223}}}}}
+{"info":{"version":"1.0.0"},"anythingYouWantHere":{},"users":{"id_1":{"coords":{"method":"SetEntityCoords","parameters":["me",200,5417,541]}}},"test":"test 2024-02-15T12:25:11.866Z","a":{"b":{"c":"test 2024-02-15T12:53:11.719Z"}},"localiza":{"car":{}}}
