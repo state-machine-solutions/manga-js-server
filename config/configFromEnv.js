@@ -94,7 +94,7 @@ const configInfo = {
   },
   attached: [],
   initialData: process.env.INITIAL_DATA || './initialData.json',
-  hidePanel: process.env.HIDE_PANEL || true,
+  hidePanel: process.env.HIDE_PANEL === 'true',
   measureBytes: false,
   autoSave: {
     frequencyMinutes: process.env.AUTO_SAVE_FREQUENCE || 0
