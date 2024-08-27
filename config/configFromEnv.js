@@ -22,7 +22,10 @@ if (httpReadPort) {
       delete: false,
       clear: false
     },
-    apiToken: process.env.HTTP_READ_AUTH_API_TOKEN || null,
+    auth: {
+      type: 'apiToken',
+      apiToken: process.env.HTTP_READ_AUTH_API_TOKEN || null,
+    }
   })
 }
 if (httpWritePort) {
@@ -39,11 +42,15 @@ if (httpWritePort) {
       clear: true,
       addListener: true
     },
-    apiToken: process.env.HTTP_WRITE_AUTH_API_TOKEN || null,
+    auth: {
+      type: 'apiToken',
+      apiToken: process.env.HTTP_WRITE_AUTH_API_TOKEN || null,
+    }
   });
 }
 if (ioReadPort) {
   const auth = process.env.IO_READ_AUTH_USERNAME ? {
+    type: 'basic',
     username: process.env.IO_READ_AUTH_USERNAME,
     password: process.env.IO_READ_AUTH_PASSWORD
   } : null;
@@ -99,7 +106,24 @@ const configInfo = {
   autoSave: {
     frequencyMinutes: process.env.AUTO_SAVE_FREQUENCE || 0
   },
-  useTempData: process.env.USE_TEMP_DATA || true
+  useTempData: process.env.USE_TEMP_DATA || true,
+  privatePaths: [
+    {
+      path: '^root\..*',
+      permissions: [
+        {
+          methods: ['get', 'set', 'reset', 'message', 'delete', 'clear'],
+          authMode: 'apiToken',
+          apiToken: 'abc-123'
+        },
+        {
+          methods: ['get', 'set', 'reset', 'message', 'delete', 'clear'],
+          authMode: 'jwt-token',
+          urlValidation: 'http://localhost:3000/validateToken',
+        }
+      ]
+    }
+  ]
 }
 
 module.exports = configInfo;

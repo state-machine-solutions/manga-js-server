@@ -1,10 +1,12 @@
 [v] socket io port just to read
 [v] http port just to read
+[ ] config from json --config-json {path}
+[ ] allowed path for each connection
+[ ] private data for each connection
 [ ] http port just with api key and secrets
 [ ] JWT_CHECKER_URL ON HTTP
 [ ] JWT_CHECKER_URL ON IO
 [ ] rootAccess
-[ ] private data
 [ ] player limitations
 [v] temp data - expiration time
 [v] garbage collector
