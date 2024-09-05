@@ -133,16 +133,25 @@ function IoServer(stateMachineServer, config = null) {
     }
     setInterval(updateLastsBytes, 1000);
     io.on('connection', (client) => {
-        //to void the error : (node:10720) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added to [Socket]. Use emitter.setMaxListeners() to increase limit
+        //check auth
+        if (useAuth) {
+            const { username, password } = client.handshake.auth;
+            if (username !== auth.username || password !== auth.password) {
+                client.disconnect();
+                return;
+            }
+            client.user = { username, auth: true };
+        }
+        if (!client?.user?.auth) {
+            client.user = { name: "", auth: true };
+        }
         client.setMaxListeners(0);
         client.totalBytes = 0;
         client.partialBytes = 0;
         client.messageCount = 0;
         client.lastBytes = new Map();
         client.dateIn = new Date();
-        if (!useAuth) {
-            client.user.auth = true;
-        }
+
         connectedClients.set(client.id, client);
         connectedClientsTotal = connectedClients.size;
         addLog("(>) socket.io client connected:", client.id)
