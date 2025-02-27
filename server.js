@@ -1,5 +1,4 @@
 'use strict';
-let fs = require('fs');
 const SMSCore = require('./modules/server');
 const configInfo = require("./config/configFromEnv");
 
@@ -69,7 +68,7 @@ d.onUpdate.add(() => {
       const io = conn.instance;
       let loggeds = io ? io.getLoggedNames() : null;
       let connecteds = io ? io.getConnectedClients() : [];
-      let colors = [d.color.yellow, d.color.blueBright, d.color.green, d.color.red];
+      let colors = a[d.color.yellow, d.color.blueBright, d.color.green, d.color.red];
       let j = 0;
 
 

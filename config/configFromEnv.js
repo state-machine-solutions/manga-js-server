@@ -4,10 +4,10 @@ const packageInfo = require('../package.json');
 const appName = process.env.APP_NAME || packageInfo.name
 let version = ' v.' + packageInfo.version;
 
-const ioReadPort = process.env.IO_READ_PORT || 8000
-const ioWritePort = process.env.IO_WRITE_PORT || ioReadPort + 1
-let httpReadPort = process.env.HTTP_READ_PORT || 80
-let httpWritePort = process.env.HTTP_WRITE_PORT || httpReadPort + 1
+const ioReadPort = process.env.IO_READ_PORT;
+const ioWritePort = process.env.IO_WRITE_PORT;
+let httpWritePort = process.env.HTTP_WRITE_PORT;
+let httpReadPort = process.env.HTTP_READ_PORT;
 const connections = [];
 if (httpReadPort) {
   connections.push({

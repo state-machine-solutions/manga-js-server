@@ -1,336 +1,284 @@
 # Manga JS Server
 
-![manga.js logo](https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation/blob/main/manga_logo.png?raw=true)
+![Manga.js Logo](https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation/blob/main/manga_logo.png?raw=true)
 
-The purpose of this project is to create a state machine server to keep organized data and be able to add listeners with socket.io in specific paths and in addition to providing a possible form of messages between socket.io clients.
+## Overview
 
-It's posible to dispose data by http protocol
+Manga JS Server is a **state machine server** designed for structured data management. It allows:
 
-## Docker
+- **Real-time data updates** via `socket.io` listeners.
+- **Inter-client messaging** with optional persistence.
+- **Memcache-like functionality** for caching and session management.
+- **Collision-free read/write operations** for distributed systems.
+- **HTTP-based data access** (optional).
 
-To easy build you need to run once:
+## Features
 
-```
+- **Real-time Listeners**: Clients can subscribe to data paths and receive instant updates.
+- **Inter-client Messaging**: Supports socket-based messaging with optional persistence.
+- **State Machine Management**: Efficient handling of system states.
+- **Memcache & Session Storage**: Quick access to temporary and persistent data.
+- **REST API Support**: Data access via HTTP.
+
+---
+
+## Installation (Docker)
+
+### **1. Build the Docker Image**
+Run the following command **once**:
+```sh
 sh build-docker.sh
 ```
 
-To run:
-
-```
+### **2. Start the Server**
+```sh
 sh run-docker.sh
 ```
 
-## ENV EXAMPLE
+---
 
-```
+## Environment Configuration (`.env`)
+
+```ini
+# Server instance name (for identification only)
 APP_NAME=Example
+
+# HTTP Read-only API (Optional)
 HTTP_READ_PORT=80
-HTTP_READ_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
-HTTP_READ_AUTH_API_TOKEN=abc123
+HTTP_READ_AUTH_API_TOKEN=abc123  # Authorization token (optional)
 
+# HTTP Write API (Optional - enables /set, /reset, /delete)
 HTTP_WRITE_PORT=81
-HTTP_WRITE_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
-HTTP_WRITE_AUTH_API_TOKEN=abc1234
+HTTP_WRITE_AUTH_API_TOKEN=abc1234  # Authorization token (optional)
 
+# WebSocket Read API (Optional - subscribe to data updates)
 IO_READ_PORT=8000
-IO_READ_AUTH_USERNAME=test2
+IO_READ_AUTH_USERNAME=test2  # Authentication (optional)
 IO_READ_AUTH_PASSWORD=pass2
 IO_READ_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
 
+# WebSocket Write API (Optional - modify data)
 IO_WRITE_PORT=8001
 IO_WRITE_AUTH_USERNAME=test2
 IO_WRITE_AUTH_PASSWORD=pass2
 IO_WRITE_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
 
+# Initial data file
 INITIAL_DATA=./initialData.json
+
+# Auto-save frequency (in seconds)
 AUTO_SAVE_FREQUENCE=10.1
 
-# make false to run on container, true to run on local machine and debug
-HIDE_PANEL=true
+# Debugging
+HIDE_PANEL=true  # Set to false for container mode, true for local debugging
 
-# If it is true make possible to set temporary data that automatic vanish after a setted time
+# Temporary data support (auto-expiring data)
 USE_TEMP_DATA=true
+
+# REST API base path
 HTTP_REST_PATH="/rest"
 ```
 
-## Overview
+---
 
-[Repository Overview](./repository-overview.md)
+## API Usage
 
-## HTTP
+### **1. RESTful API**
 
-You can access api via http RESTFUL or API METHODS.
+If `HTTP_REST_PATH` is set in `.env`, RESTful access is enabled:
 
-For all examples consider this data struture:
-
+#### **GET** (Retrieve data)
+```http
+GET http://localhost/rest/aa/bb/cc
 ```
+Equivalent to:
+```http
+GET /get?path=aa.bb.cc
+```
+
+#### **POST** (Update data without overwriting existing values)
+```http
+POST http://localhost/rest/aa/bb/cc
+```
+Request Body:
+```json
 {
-    my:{
-        data:{
-            points: {
-                current:43
-            },
-            info:{
-                name: "Test",
-                keys: ["a", "b", { x: 1, y: 2 }]
-            }
-        }
+    "value": { "example": 1 }
+}
+```
+Equivalent to:
+```http
+POST /set?path=aa.bb.cc
+```
+
+#### **PUT** (Reset data at a path, replacing existing values)
+```http
+PUT http://localhost/rest/aa/bb/cc
+```
+Request Body:
+```json
+{
+    "value": { "example": 2 }
+}
+```
+Equivalent to:
+```http
+POST /reset?path=aa.bb.cc
+```
+
+#### **DELETE** (Remove data)
+```http
+DELETE http://localhost/rest/aa/bb
+```
+Equivalent to:
+```http
+POST /delete?path=aa.bb
+```
+
+To clear all data:
+```http
+DELETE http://localhost/rest/
+```
+Equivalent to:
+```http
+POST /clear
+```
+
+---
+
+### **2. API Methods**
+
+#### **Check Server Status**
+```http
+GET /ping
+```
+Response:
+```json
+{
+    "started": "2025-02-27T12:34:56Z",
+    "stats": {
+        "gets": 0,
+        "sets": 0,
+        "listeners": 0,
+        "clear": 0,
+        "delete": 0,
+        "reset": 0,
+        "message": 0
     }
 }
 ```
 
-## RESTFUL
-
-It's possible to configure a Restful start path on .env using `HTTP_REST_PATH="/rest"`
-
-For all access data or save data in manga (less clear method), we need to know the `path`.
-If you are using RESTFUL mode to access, the path come from url path.
-
-for this url: `GET` `http://localhost/rest/aa/bb/cc`
-
-The result will be get the value of path "aa.bb.cc".
-
-| Notie: the HTTP_REST_PATH name will be removed from path to build a path.
-
-`${serverUrl}${HTTP_REST_PATH}/your/path/here`
-
-And it works for all of 5 actions of MangaServer to call:
-
-### GET
-
-Get data values from path.
-
-for this url: `GET` `http://localhost/rest/aa/bb/cc`
-
-The result will be get the value of path "aa.bb.cc".
-
-| The same result of API METHOD /get?path=aa.bb.cc
-
-### POST
-
-RESET data values from path and with values inside a `body.value`.
-
-for this url: `POST` `http://localhost/rest/aa/bb/cc`
-
-Manga will consider the path path "aa.bb.cc".
-And if you use the body value:
-
+#### **Retrieve Data**
+```http
+GET /get?path=my.data.points
 ```
+Response:
+```json
 {
-    "value":  {
-        "example": 1
-    }
+    "current": 43
 }
 ```
 
-Manga will merge data inside a path `aa.bb.cc` with the new sent data.
-
-| The same result of API METHOD /set?path=aa.bb.cc
-
-### PUT
-
-RESET data values from path and with values inside a `body.value`.
-
-for this url: `PUT` `http://localhost/rest/aa/bb/cc`
-
-Manga will consider the path path "aa.bb.cc".
-And if you use the body value:
-
+#### **Update Data (Merge with existing values)**
+```http
+POST /set
 ```
-{
-    "value":  {
-        "example": 2
-    }
-}
-```
-
-Manga will reset data inside a path `aa.bb.cc` with the new sent data. The data will be overwrited.
-
-| The same result of API METHOD /reset?path=aa.bb.cc
-
-### DELETE
-
-Delete method can call two `delete` or `clear`.
-If you do not send `path`, for exemple:
-
-`DELETE` `http://localhost/rest/`
-
-Manga Server will consider a `clear` method.
-
-| The same result of API METHOD /clear
-
-And if you send `path`, for example:
-
-`DELETE` `http://localhost/rest/aa/bb`
-
-Manga will delete all properties inside aa.bb and de `bb` attribute from aa object.
-
-| The same result of API METHOD /delete?path=aa.bb
-
-## API METHODS
-
-`get` '/ping'
-
-Just to check if server and shows server stats
-
-```
-{
-    started: new Date(),
-    stats:{
-        gets:0,
-        sets:0,
-        listeners:0,
-        clear:0,
-        delete:0,
-        reset:0,
-        message:0
-    }
-}
-```
-
-### get
-
-`get` '/get'
-`get` '/'
-
-params: `path`
-
-To get values based in `path`
-
-### Example:
-
-`/get?path=my.data.points`
-
-Result:
-
-```
-{
-    "current":43
-}
-```
-
-## set
-
-`post` '/set'
-
-To update value based on path, but merging with server values
-
-### Example:
-
-`/set`
-
-Body:
-
-```
+Request Body:
+```json
 {
     "path": "my.data.points",
-    "value": {
-        last: 12
-    }
+    "value": { "last": 12 }
 }
 ```
-
-Return
-
-```
+Response:
+```json
 {
     "success": true
 }
 ```
-
-After change the result of `my.data.points` will be:
-
-```
+New Data Structure:
+```json
 {
     "current": 43,
     "last": 12
 }
 ```
 
-## reset
-
-`post` '/reset'
-
-The same as `/set` but overwrite server value
-
-### Example:
-
-`/reset`
-
-Body:
-
+#### **Reset Data (Overwrite existing values)**
+```http
+POST /reset
 ```
+Request Body:
+```json
 {
     "path": "my.data.points",
-    "value": {
-        last: 12
-    }
+    "value": { "last": 12 }
 }
 ```
-
-Return
-
-```
+Response:
+```json
 {
     "success": true
 }
 ```
-
-After change the result of `my.data.points` will be:
-
-```
+New Data Structure:
+```json
 {
     "last": 12
 }
 ```
 
-The `current` all values will be lost
-
-## message
-
-`post` '/message'
-
-Body Params:
-
+#### **Send Message to Clients**
+```http
+POST /message
 ```
+Request Body:
+```json
 {
-    path:string, value:any
+    "path": "notifications",
+    "value": "New update available"
+}
+```
+*Messages are only received by WebSocket clients.*
+
+#### **Delete Data at a Path**
+```http
+POST /delete
+```
+Request Body:
+```json
+{
+    "path": "my.data.points"
 }
 ```
 
-Message do not save data. But if some client was connected by socket.io, they will receive the message sent by this method.
-
-| There is no http listener clients. Is not possible to receive messages by http
-
-## delete
-
-`post` '/delete'
-`delete` '/'
-
-Body:
-
-```
-{ path: string }
+#### **Clear All Data**
+```http
+POST /clear
 ```
 
-Remove data based on path
+---
 
-## clear
+## WebSocket Integration
 
-`post` '/clear'
+For WebSocket connectivity, use:
+[manga-ts-socket-io-sdk](https://www.npmjs.com/package/manga-ts-socket-io-sdk)
 
-Delete all data on server
+Refer to the SDK documentation for connection details.
 
-## Donate:
+---
 
-If this project helps you, please donate
+## Support & Contributions
 
-https://www.paypal.com/donate/?hosted_button_id=TX922XCPET8QG
+### **Donate**
+If this project helps you, consider donating:
 
-![donation qrcode image](https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation/blob/main/donations_QRcode.png?raw=true)
+[![Donate](https://www.paypal.com/donate/?hosted_button_id=TX922XCPET8QG)](https://www.paypal.com/donate/?hosted_button_id=TX922XCPET8QG)
 
-## Documentation
+![Donation QR Code](https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation/blob/main/donations_QRcode.png?raw=true)
 
-See documentation on github
+### **Documentation & Source Code**
+Find the full documentation and source code on GitHub:
 
-https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation
+🔗 [GitHub Documentation](https://github.com/state-machine-solutions/State-Machine-Solutions-Documentation)
+
