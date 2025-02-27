@@ -67,7 +67,12 @@ IO_WRITE_JWT_CHECKER_URL="http://localhost:8002?token={jwt}"
 INITIAL_DATA=./initialData.json
 
 # Auto-save frequency (in seconds)
+
+if zero (0) do not instantiate AutoSave class
+
 AUTO_SAVE_FREQUENCE=10.1
+
+
 
 # Debugging
 HIDE_PANEL=true  # Set to false for container mode, true for local debugging
