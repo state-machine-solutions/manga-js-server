@@ -33,12 +33,13 @@ for (let i = 0; i < configInfo.connections.length; i++) {
   let conn = configInfo.connections[i];
   d.addItem(currentLine, 0, "Conn Type", 10, conn.type);
   d.addItem(currentLine, 1, "Port", 10, conn.port);
-  d.addItem(currentLine, 2, "Permissions", 25, `${conn.permissions}`);
-  d.addItem(currentLine, 3, "Permissions", 25, `${conn.permissions}`);
-  d.addItem(currentLine, 4, "Checkins", 15, () => {
+  let permissions = Object.values(conn.permissions).join("|");
+  let permisssionsLabel = Object.keys(conn.permissions).join("|");
+  d.addItem(currentLine, 2, "Permissions " + permisssionsLabel, 80, `            ${permissions}`);
+  d.addItem(currentLine, 3, "Checkins", 15, () => {
     return conn.type == "io" ? conn.instance.getCheckinClientsTotal() : "none"
   })
-  d.addItem(currentLine, 5, "Connecteds", 15, () => {
+  d.addItem(currentLine, 4, "Connecteds", 15, () => {
     return conn.type == "io" ? conn.instance.getConnectedClientsTotal() : "disable"
   })
   currentLine++;
@@ -68,7 +69,6 @@ d.onUpdate.add(() => {
       const io = conn.instance;
       let loggeds = io ? io.getLoggedNames() : null;
       let connecteds = io ? io.getConnectedClients() : [];
-      let colors = a[d.color.yellow, d.color.blueBright, d.color.green, d.color.red];
       let j = 0;
 
 
