@@ -16,6 +16,8 @@ function HttpServer(stateMachineServer, config = null) {
     this.permissions.addListener = false;
     const hasPermission = !!(config?.permissions);
     const httpServer = http.createServer(app);
+    const rateLimit = config?.rateLimit || 0;
+    const useRateLimiter = config?.rateLimit > 0;
 
     this.getHttpServer = () => httpServer;
 
@@ -149,14 +151,16 @@ function HttpServer(stateMachineServer, config = null) {
         res.send({ success: false, data: { confirmationCode: code }, messages: ["Confirm action sending the confirmation code"] });
     };
 
-    const rateLimiter = expressRateLimit({
-        windowMs: 15 * 60 * 1000,
-        max: 100,
-        message: 'Too many requests from this IP, please try again later.',
-        statusCode: 429,
-    });
 
-    app.use(rateLimiter);
+    if (useRateLimiter) {
+        const rateLimiter = expressRateLimit({
+            windowMs: 15 * 60 * 1000,
+            max: rateLimit,
+            message: 'Too many requests from this IP, please try again later.',
+            statusCode: 429,
+        });
+        app.use(rateLimiter);
+    }
     const httpRestPath = config?.httpRestPath || '/rest';
     app.get(`${httpRestPath}/*`, restResolvePath(callOrDeny('get', httpGet)));
     app.post(`${httpRestPath}/*`, restResolvePath(callOrDeny('set', httpPost)));

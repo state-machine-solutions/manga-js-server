@@ -99,7 +99,8 @@ const configInfo = {
   autoSave: {
     frequencyMinutes: process.env.AUTO_SAVE_FREQUENCE || 0
   },
-  useTempData: process.env.USE_TEMP_DATA || true
+  useTempData: process.env.USE_TEMP_DATA || true,
+  rateLimit: process.env.RATE_LIMIT ? parseInt(process.env.RATE_LIMIT) : 0,
 }
 
 module.exports = configInfo;
