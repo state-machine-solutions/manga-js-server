@@ -34,7 +34,7 @@ function HttpServer(stateMachineServer, config = null) {
     };
 
     const httpPing = (req, res) => {
-        res.json({ success: true, data: { info: stateMachineServer.getInfo(), permissions: me.permissions } });
+        res.json({ success: true, data: { info: stateMachineServer.getInfo(), permissions: me.permissions, useRateLimiter } });
     };
 
     const httpGet = (req, res) => {
